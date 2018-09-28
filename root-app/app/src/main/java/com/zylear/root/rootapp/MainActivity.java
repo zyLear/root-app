@@ -24,22 +24,29 @@ public class MainActivity extends AppCompatActivity {
     private void requirePermission() {
         DataOutputStream outputStream = null;
         try {
-            Process exec = Runtime.getRuntime().exec("su");
-            Thread.sleep(15000);
-//            DataInputStream inputStream = new DataInputStream(exec.getInputStream());
-            outputStream = new DataOutputStream(exec.getOutputStream());
-            Log.d("dev", "requirePermission:  after su");
-            outputStream.writeBytes("mkdir /data/local/tmp/zy");
-            Log.d("dev", "requirePermission:  after make directory");
+//            Process exec = Runtime.getRuntime().exec("su");
+//            Process exec = Runtime.getRuntime().exec("ls");
 
-//            ActivityCompat.requestPermissions(this, new String[]{"android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"}, 1);
+            long l = System.currentTimeMillis();
+//            Thread.sleep(10000);
+//            System.out.println("time: " + (System.currentTimeMillis() - l));
+//            DataInputStream inputStream = new DataInputStream(exec.getInputStream());
+//            outputStream = new DataOutputStream(exec.getOutputStream());
+//            Log.d("dev", "requirePermission:  after su");
+//            outputStream.writeBytes("mkdir /data/local/tmp/zy");
+//            Log.d("dev", "requirePermission:  after make directory");
+
+            ActivityCompat.requestPermissions(this, new String[]{"android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"}, 1);
+
+//            Thread.sleep(10000);
 //            Log.d("dev", "requirePermission:  after requestPermissions");
         } catch (Exception e) {
             Log.e("dev", "requirePermission:  error", e);
+            e.printStackTrace();
         } finally {
             try {
                 outputStream.close();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
