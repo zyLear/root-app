@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ControlPanelActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            tools:layout_editor_absoluteX="384dp">
+
+            <Button
+                android:id="@+id/apply"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="applay" />
+
+            <Button
+                android:id="@+id/createDirectory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="create" />
+
+            <Button
+                android:id="@+id/deleteDirectory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="delete" />
+
+            <Button
+                android:id="@+id/startPassCheck"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="startPassCheck" />
+
+            <Button
+                android:id="@+id/stopPassCheck"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="stopPassCheck" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>
