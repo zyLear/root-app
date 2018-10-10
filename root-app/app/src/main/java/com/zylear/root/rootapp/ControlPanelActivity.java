@@ -11,7 +11,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.zylear.root.rootapp.bean.PassCheckBean;
 import com.zylear.root.rootapp.constants.AppConstant;
+import com.zylear.root.rootapp.util.JsonUtil;
 import com.zylear.root.rootapp.util.OkHttpUtil;
 
 import java.io.BufferedInputStream;
@@ -101,29 +103,14 @@ public class ControlPanelActivity extends AppCompatActivity {
                     Process exec = Runtime.getRuntime().exec("su");
                     BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
 
-
-                    String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, "");
+                    PassCheckBean passCheckBean = new PassCheckBean("admin", "admin", AppConstant.STOP_PASS_CHECK);
+                    String param = JsonUtil.toJSONString(passCheckBean);
+                    String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
                     System.out.println("content:    " + content);
 
-
-//            String string = "";
                     outputStream = new DataOutputStream(exec.getOutputStream());
                     outputStream.writeBytes(content);
                     new Run(br).start();
-
-//            Thread.sleep(500);
-//            br.close();
-//
-//
-//            Thread.sleep(500);
-//            File file = new File(string);
-//            if (file.exists()) {
-//                Toast.makeText(this, "delete fail", Toast.LENGTH_SHORT).show();
-//            } else {
-//                Toast.makeText(this, "delete success", Toast.LENGTH_SHORT).show();
-//            }
-
-
                 } catch (Exception e) {
                     Log.e("dev", "requirePermission:  error", e);
                 } finally {
@@ -138,47 +125,32 @@ public class ControlPanelActivity extends AppCompatActivity {
     }
 
     private void startPassCheck() {
-        DataOutputStream outputStream = null;
-        try {
-            Process process = Runtime.getRuntime().exec("su");
-            outputStream = new DataOutputStream(process.getOutputStream());
-//            DataInputStream inputStream = new DataInputStream(exec.getInputStream());
-            BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            outputStream.writeBytes("mount -o remount rw / \n");
-            outputStream.writeBytes("mkdir /zy \n");
-//            outputStream.writeBytes("ls /");
-            String string;
-//            Thread.sleep(500);
-//            while ((string = br.readLine()) != null) {
-//                System.out.println("rererererere :" + string);
-//            }
+        new Thread() {
+            @Override
+            public void run() {
+                DataOutputStream outputStream = null;
+                try {
+                    Process exec = Runtime.getRuntime().exec("su");
+                    BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
 
-//            byte[] bytes = new byte[1024];
-//            inputStream.read(bytes);
-//            System.out.println(new String(bytes));
-
-//            String content = OkHttpUtil.syncExeJsonPostGetString("", "");
-//            if (content != null) {
-//                outputStream.writeBytes(content);
-            Thread.sleep(500);
-//                File file = new File("/data/local/tmp/zy");
-//                if (file.exists()) {
-//                    Toast.makeText(this, "delete fail", Toast.LENGTH_SHORT).show();
-//                } else {
-            Toast.makeText(this, "delete success", Toast.LENGTH_SHORT).show();
-//                }
-//            }
-        } catch (Exception e) {
-            Log.e("dev", "requirePermission:  error", e);
-        } finally {
-            try {
-                if (outputStream != null) {
-                    outputStream.close();
+                    PassCheckBean passCheckBean = new PassCheckBean("admin", "admin", AppConstant.PASS_CHECK);
+                    String param = JsonUtil.toJSONString(passCheckBean);
+                    String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
+                    System.out.println("content:    " + content);
+                    new Run(br).start();
+                    outputStream = new DataOutputStream(exec.getOutputStream());
+                    outputStream.writeBytes(content);
+                } catch (Exception e) {
+                    Log.e("dev", "requirePermission:  error", e);
+                } finally {
+                    try {
+                        outputStream.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        }
+        }.start();
     }
 
     private void deleteDirectory() {
