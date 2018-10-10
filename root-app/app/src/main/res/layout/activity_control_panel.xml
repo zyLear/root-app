@@ -24,10 +24,10 @@
                 android:text="applay" />
 
             <Button
-                android:id="@+id/createDirectory"
+                android:id="@+id/changeBrand"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="create" />
+                android:text="change brand" />
 
             <Button
                 android:id="@+id/deleteDirectory"
