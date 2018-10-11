@@ -8,6 +8,9 @@ public class AppConstant {
 
     public static final String PASS_CHECK = "pass_check";
     public static final String STOP_PASS_CHECK = "stop_pass_check";
+    public static final String INIT_SH = "init.sh";
+    public static final String BUILD_PROP = "build.prop";
+
 
 
 }

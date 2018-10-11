@@ -3,6 +3,7 @@ package com.zylear.root.rootapp;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,11 +17,11 @@ import com.zylear.root.rootapp.constants.AppConstant;
 import com.zylear.root.rootapp.util.JsonUtil;
 import com.zylear.root.rootapp.util.OkHttpUtil;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.DataInputStream;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -32,7 +33,7 @@ public class ControlPanelActivity extends AppCompatActivity {
             Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     private Button apply;
-    private Button createDirectory;
+    private Button changeBrand;
     private Button deleteDirectory;
     private Button startPassCheck;
     private Button stopPassCheck;
@@ -52,13 +53,14 @@ public class ControlPanelActivity extends AppCompatActivity {
             }
         });
 
-        createDirectory = findViewById(R.id.createDirectory);
+        changeBrand = findViewById(R.id.changeBrand);
 
-        createDirectory.setOnClickListener(new View.OnClickListener() {
+        changeBrand.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                createDirectory();
+//                changeBrand();
+                changeBrand();
             }
         });
 
@@ -68,7 +70,7 @@ public class ControlPanelActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                deleteDirectory();
+                recoverBrand();
             }
         });
 
@@ -91,6 +93,89 @@ public class ControlPanelActivity extends AppCompatActivity {
                 stopPassCheck();
             }
         });
+    }
+
+    private void recoverBrand() {
+
+
+    }
+
+    private void changeBrand() {
+
+        new Thread() {
+            @Override
+            public void run() {
+                DataOutputStream outputStream = null;
+                BufferedWriter fileWriter = null;
+                BufferedWriter buildWriter = null;
+                try {
+                    Process exec = Runtime.getRuntime().exec("su");
+//                    BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
+
+//                    PassCheckBean passCheckBean = new PassCheckBean("admin", "admin", AppConstant.INIT_SH);
+//                    String param = JsonUtil.toJSONString(passCheckBean);
+//                    String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
+//                    System.out.println("content:    " + content);
+
+                    outputStream = new DataOutputStream(exec.getOutputStream());
+                    outputStream.writeBytes("mount -o remount rw / \n");
+//                    outputStream.writeBytes("mount -o remount rw /system\n");
+                    outputStream.writeBytes("mount -o remount rw /etc \n");
+                    outputStream.writeBytes("mkdir /etc/tests\n");
+                    outputStream.writeBytes("mkdir /tests\n");
+                    System.out.println("papapa path: "+ Environment.getExternalStorageDirectory().getPath());
+                    if (!new File("/sdcard/init_old.sh").exists()) {
+                        outputStream.writeBytes("cp -rf /etc/init.sh /sdcard/init_old.sh\n");
+                        outputStream.writeBytes("cp -rf /system/build.prop /sdcard/build_old.prop\n");
+                    }
+
+
+
+//                    PassCheckBean passCheckBean = new PassCheckBean("admin", "admin", AppConstant.INIT_SH);
+//                    String param = JsonUtil.toJSONString(passCheckBean);
+//                    String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
+//                    System.out.println("init content:    " + content);
+//                    File init = new File("/etc/init.sh");
+//                    if (!init.exists()) {
+//                        init.createNewFile();
+//                    }
+//                    fileWriter = new BufferedWriter(new FileWriter(init));
+//                    fileWriter.write(content);
+//
+//                    passCheckBean = new PassCheckBean("admin", "admin", AppConstant.INIT_SH);
+//                    param = JsonUtil.toJSONString(passCheckBean);
+//                    content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
+//                    System.out.println("build content:    " + content);
+//
+//                    File build = new File("/system/build.prop");
+//                    if (!build.exists()) {
+//                        build.createNewFile();
+//                    }
+//                    buildWriter = new BufferedWriter(new FileWriter(build));
+//                    buildWriter.write(content);
+
+//                    new Run(br).start();
+                } catch (Exception e) {
+                    Log.e("dev", "requirePermission:  error", e);
+                } finally {
+                    try {
+                        if (buildWriter != null) {
+                            buildWriter.close();
+                        }
+                        if (fileWriter != null) {
+                            fileWriter.close();
+                        }
+
+                        if (outputStream != null) {
+                            outputStream.close();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
+
     }
 
     private void stopPassCheck() {
