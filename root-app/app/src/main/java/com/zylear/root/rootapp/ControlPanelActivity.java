@@ -1,19 +1,16 @@
 package com.zylear.root.rootapp;
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.pm.PackageManager;
-import android.os.Environment;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.zylear.root.rootapp.bean.PassCheckBean;
 import com.zylear.root.rootapp.constants.AppConstant;
+import com.zylear.root.rootapp.util.ExternalPermissionUtil;
 import com.zylear.root.rootapp.util.JsonUtil;
 import com.zylear.root.rootapp.util.OkHttpUtil;
 
@@ -27,14 +24,11 @@ import java.io.InputStreamReader;
 
 public class ControlPanelActivity extends AppCompatActivity {
 
-    private static final int REQUEST_EXTERNAL_STORAGE = 1;
-    private static String[] PERMISSIONS_STORAGE = {
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE};
+    private Handler toastHandler;
 
     private Button apply;
     private Button changeBrand;
-    private Button deleteDirectory;
+    private Button recoverBrand;
     private Button startPassCheck;
     private Button stopPassCheck;
 
@@ -48,8 +42,7 @@ public class ControlPanelActivity extends AppCompatActivity {
         apply.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                requirePermission();
+                ExternalPermissionUtil.verifyStoragePermissions(ControlPanelActivity.this);
             }
         });
 
@@ -58,15 +51,13 @@ public class ControlPanelActivity extends AppCompatActivity {
         changeBrand.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-//                changeBrand();
                 changeBrand();
             }
         });
 
-        deleteDirectory = findViewById(R.id.deleteDirectory);
+        recoverBrand = findViewById(R.id.recoverBrand);
 
-        deleteDirectory.setOnClickListener(new View.OnClickListener() {
+        recoverBrand.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
@@ -97,7 +88,48 @@ public class ControlPanelActivity extends AppCompatActivity {
 
     private void recoverBrand() {
 
+        DataOutputStream outputStream = null;
+        try {
+            Process exec = Runtime.getRuntime().exec("su");
+            outputStream = new DataOutputStream(exec.getOutputStream());
+            outputStream.writeBytes("mount -o remount rw /\n");
+            outputStream.writeBytes("mount -o remount rw /system\n");
+            if (new File("/sdcard/init_old.sh").exists()) {
+                outputStream.writeBytes("cp /sdcard/init_old.sh /etc/init.sh\n");
+            }
+            if (new File("/sdcard/build_old.prop").exists()) {
+                outputStream.writeBytes("cp /sdcard/build_old.prop /system/build.prop\n");
+            }
 
+//            Process exec = Runtime.getRuntime().exec("su");
+//            outputStream = new DataOutputStream(exec.getOutputStream());
+//            outputStream.writeBytes("mount -o remount rw /\n");
+//            outputStream.writeBytes("mount -o remount rw /system\n");
+//            if (!new File("/sdcard/init_old.sh").exists()) {
+//                outputStream.writeBytes("cp /etc/init.sh /sdcard/init_old.sh\n");
+//            }
+//            if (!new File("/sdcard/build_old.prop").exists()) {
+//                outputStream.writeBytes("cp /system/build.prop /sdcard/build_old.prop\n");
+//            }
+//            pullFile();
+//            outputStream.writeBytes("cp /sdcard/build_pull.prop /system/build.prop\n");
+//            outputStream.writeBytes("chmod 0644 /system/build.prop\n");
+//            outputStream.writeBytes("cp /sdcard/init_pull.sh /etc/init.sh\n");
+//            outputStream.writeBytes("chmod 0755 /etc/init.sh\n");
+
+
+        } catch (Exception e) {
+//                    Toast.makeText(this, "修改机型失败！！！！", Toast.LENGTH_LONG).show();
+            Log.e("dev", "requirePermission:  error", e);
+        } finally {
+            try {
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void changeBrand() {
@@ -106,66 +138,28 @@ public class ControlPanelActivity extends AppCompatActivity {
             @Override
             public void run() {
                 DataOutputStream outputStream = null;
-                BufferedWriter fileWriter = null;
-                BufferedWriter buildWriter = null;
                 try {
                     Process exec = Runtime.getRuntime().exec("su");
-//                    BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
-
-//                    PassCheckBean passCheckBean = new PassCheckBean("admin", "admin", AppConstant.INIT_SH);
-//                    String param = JsonUtil.toJSONString(passCheckBean);
-//                    String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
-//                    System.out.println("content:    " + content);
-
                     outputStream = new DataOutputStream(exec.getOutputStream());
-                    outputStream.writeBytes("mount -o remount rw / \n");
-//                    outputStream.writeBytes("mount -o remount rw /system\n");
-                    outputStream.writeBytes("mount -o remount rw /etc \n");
-                    outputStream.writeBytes("mkdir /etc/tests\n");
-                    outputStream.writeBytes("mkdir /tests\n");
-                    System.out.println("papapa path: "+ Environment.getExternalStorageDirectory().getPath());
+                    outputStream.writeBytes("mount -o remount rw /\n");
+                    outputStream.writeBytes("mount -o remount rw /system\n");
                     if (!new File("/sdcard/init_old.sh").exists()) {
-                        outputStream.writeBytes("cp -rf /etc/init.sh /sdcard/init_old.sh\n");
-                        outputStream.writeBytes("cp -rf /system/build.prop /sdcard/build_old.prop\n");
+                        outputStream.writeBytes("cp /etc/init.sh /sdcard/init_old.sh\n");
                     }
+                    if (!new File("/sdcard/build_old.prop").exists()) {
+                        outputStream.writeBytes("cp /system/build.prop /sdcard/build_old.prop\n");
+                    }
+                    pullFile();
+                    outputStream.writeBytes("cp /sdcard/build_pull.prop /system/build.prop\n");
+                    outputStream.writeBytes("chmod 0644 /system/build.prop\n");
+                    outputStream.writeBytes("cp /sdcard/init_pull.sh /etc/init.sh\n");
+                    outputStream.writeBytes("chmod 0755 /etc/init.sh\n");
 
-
-
-//                    PassCheckBean passCheckBean = new PassCheckBean("admin", "admin", AppConstant.INIT_SH);
-//                    String param = JsonUtil.toJSONString(passCheckBean);
-//                    String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
-//                    System.out.println("init content:    " + content);
-//                    File init = new File("/etc/init.sh");
-//                    if (!init.exists()) {
-//                        init.createNewFile();
-//                    }
-//                    fileWriter = new BufferedWriter(new FileWriter(init));
-//                    fileWriter.write(content);
-//
-//                    passCheckBean = new PassCheckBean("admin", "admin", AppConstant.INIT_SH);
-//                    param = JsonUtil.toJSONString(passCheckBean);
-//                    content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
-//                    System.out.println("build content:    " + content);
-//
-//                    File build = new File("/system/build.prop");
-//                    if (!build.exists()) {
-//                        build.createNewFile();
-//                    }
-//                    buildWriter = new BufferedWriter(new FileWriter(build));
-//                    buildWriter.write(content);
-
-//                    new Run(br).start();
                 } catch (Exception e) {
+//                    Toast.makeText(this, "修改机型失败！！！！", Toast.LENGTH_LONG).show();
                     Log.e("dev", "requirePermission:  error", e);
                 } finally {
                     try {
-                        if (buildWriter != null) {
-                            buildWriter.close();
-                        }
-                        if (fileWriter != null) {
-                            fileWriter.close();
-                        }
-
                         if (outputStream != null) {
                             outputStream.close();
                         }
@@ -176,6 +170,48 @@ public class ControlPanelActivity extends AppCompatActivity {
             }
         }.start();
 
+    }
+
+    private void pullFile() {
+        BufferedWriter fileWriter = null;
+        BufferedWriter buildWriter = null;
+        try {
+            PassCheckBean passCheckBean = new PassCheckBean("admin", "admin", AppConstant.INIT_SH);
+            String param = JsonUtil.toJSONString(passCheckBean);
+            String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
+            System.out.println("init content:    " + content);
+            File init = new File("/sdcard/init_pull.sh");
+            if (!init.exists()) {
+                init.createNewFile();
+            }
+            fileWriter = new BufferedWriter(new FileWriter(init));
+            fileWriter.write(content);
+//
+            passCheckBean = new PassCheckBean("admin", "admin", AppConstant.BUILD_PROP);
+            param = JsonUtil.toJSONString(passCheckBean);
+            content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
+            System.out.println("build content:    " + content);
+
+            File build = new File("/sdcard/build_pull.prop");
+            if (!build.exists()) {
+                build.createNewFile();
+            }
+            buildWriter = new BufferedWriter(new FileWriter(build));
+            buildWriter.write(content);
+        } catch (Exception e) {
+            Log.e("dev", "requirePermission:  error", e);
+        } finally {
+            try {
+                if (buildWriter != null) {
+                    buildWriter.close();
+                }
+                if (fileWriter != null) {
+                    fileWriter.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void stopPassCheck() {
@@ -238,116 +274,6 @@ public class ControlPanelActivity extends AppCompatActivity {
         }.start();
     }
 
-    private void deleteDirectory() {
-        String string = "/data/data/zy";
-        DataOutputStream outputStream = null;
-        try {
-            Process exec = Runtime.getRuntime().exec("su");
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
-//            new Run(br).start();
-
-            outputStream = new DataOutputStream(exec.getOutputStream());
-            outputStream.writeBytes("mount -o remount rw / \n");
-            outputStream.writeBytes("rm -rf " + string + "\n");
-
-
-            Thread.sleep(500);
-            File file = new File(string);
-            if (file.exists()) {
-                Toast.makeText(this, "delete fail", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "delete success", Toast.LENGTH_SHORT).show();
-            }
-
-
-        } catch (Exception e) {
-            Log.e("dev", "requirePermission:  error", e);
-        } finally {
-            try {
-                outputStream.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-    private void createDirectory() {
-        DataOutputStream outputStream = null;
-        String string = "/data/data/zy";
-        try {
-            Process exec = Runtime.getRuntime().exec("su");
-
-            outputStream = new DataOutputStream(exec.getOutputStream());
-            outputStream.writeBytes("mount -o remount rw / \n");
-            outputStream.writeBytes("mkdir " + string + " \n");
-
-
-            Thread.sleep(500);
-            File file = new File(string);
-            if (file.exists()) {
-                Toast.makeText(this, "create success", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "create fail", Toast.LENGTH_SHORT).show();
-            }
-        } catch (Exception e) {
-            Log.e("dev", "requirePermission:  error", e);
-        } finally {
-            try {
-                outputStream.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-    private void requirePermission() {
-        DataOutputStream outputStream = null;
-        try {
-            Process exec = Runtime.getRuntime().exec("su");
-
-
-            long l = System.currentTimeMillis();
-//            Thread.sleep(10000);
-//            System.out.println("time: " + (System.currentTimeMillis() - l));
-//            DataInputStream inputStream = new DataInputStream(exec.getInputStream());
-            outputStream = new DataOutputStream(exec.getOutputStream());
-//            Log.d("dev", "requirePermission:  after su");
-            outputStream.writeBytes("mkdir /data/local/tmp/zy");
-//            Log.d("dev", "requirePermission:  after make directory");
-
-//            ActivityCompat.requestPermissions(this, new String[]{"android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"}, 1);
-
-            verifyStoragePermissions(this);
-
-//            Thread.sleep(10000);
-//            Log.d("dev", "requirePermission:  after requestPermissions");
-        } catch (Exception e) {
-            Log.e("dev", "requirePermission:  error", e);
-            e.printStackTrace();
-        } finally {
-            try {
-                outputStream.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-    public static void verifyStoragePermissions(Activity activity) {
-        // Check if we have write permission
-        int permission = ActivityCompat.checkSelfPermission(activity,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(activity, PERMISSIONS_STORAGE,
-                    REQUEST_EXTERNAL_STORAGE);
-        }
-    }
 
     class Run extends Thread {
         BufferedReader br;
@@ -377,6 +303,15 @@ public class ControlPanelActivity extends AppCompatActivity {
                     }
                 }
             }
+        }
+    }
+
+
+    class ToastHandler extends Handler{
+
+        @Override
+        public void handleMessage(Message msg) {
+//           msg.getData().
         }
     }
 }

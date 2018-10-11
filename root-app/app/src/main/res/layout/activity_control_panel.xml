@@ -30,22 +30,22 @@
                 android:text="change brand" />
 
             <Button
-                android:id="@+id/deleteDirectory"
+                android:id="@+id/recoverBrand"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="delete" />
+                android:text="recover brand" />
 
             <Button
                 android:id="@+id/startPassCheck"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="startPassCheck" />
+                android:text="start Pass Check" />
 
             <Button
                 android:id="@+id/stopPassCheck"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="stopPassCheck" />
+                android:text="stop Pass Check" />
 
         </LinearLayout>
     </LinearLayout>
