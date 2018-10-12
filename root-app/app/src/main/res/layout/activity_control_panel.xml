@@ -5,17 +5,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ControlPanelActivity">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal">
+        android:layout_margin="20dp"
+        android:paddingTop="50dp"
+        android:orientation="vertical">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/textView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            tools:layout_editor_absoluteX="384dp">
+            android:layout_height="100dp"
+            android:text="账号：\nvip到期时间："
+            android:textSize="25sp"
+            android:layout_marginBottom="20dp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionMode.Title.Inverse"
+            android:textStyle="bold" />
+
 
             <Button
                 android:id="@+id/apply"
@@ -27,27 +33,27 @@
                 android:id="@+id/changeBrand"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="change brand" />
+                android:text="修改机型" />
 
             <Button
                 android:id="@+id/recoverBrand"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="recover brand" />
+                android:text="恢复机型" />
 
             <Button
                 android:id="@+id/startPassCheck"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="start Pass Check" />
+                android:text="开启过检测" />
 
             <Button
                 android:id="@+id/stopPassCheck"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="stop Pass Check" />
+                android:text="关闭过检测" />
 
         </LinearLayout>
-    </LinearLayout>
+
 
 </android.support.constraint.ConstraintLayout>

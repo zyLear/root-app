@@ -48,7 +48,11 @@ public class JsonUtil {
     }
 
     public static <T> T getObjectFromJson(String text, Class<T> clazz) {
-        return JSON.parseObject(text, clazz);
+        T t = JSON.parseObject(text, clazz);
+        if (t == null) {
+            throw new RuntimeException("get object from json fail.");
+        }
+        return t;
     }
 
     // 转换为数组

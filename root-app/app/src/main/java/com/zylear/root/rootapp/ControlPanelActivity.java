@@ -7,12 +7,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
-import com.zylear.root.rootapp.bean.PassCheckBean;
+import com.zylear.root.rootapp.bean.AppCache;
+import com.zylear.root.rootapp.bean.BaseResponse;
+import com.zylear.root.rootapp.bean.PassCheckRequest;
+import com.zylear.root.rootapp.bean.PassCheckResponse;
 import com.zylear.root.rootapp.constants.AppConstant;
+import com.zylear.root.rootapp.handler.ToastHandler;
 import com.zylear.root.rootapp.util.ExternalPermissionUtil;
 import com.zylear.root.rootapp.util.JsonUtil;
 import com.zylear.root.rootapp.util.OkHttpUtil;
+import com.zylear.root.rootapp.util.SharedPreferencesUtil;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -21,10 +27,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ControlPanelActivity extends AppCompatActivity {
 
-    private Handler toastHandler;
 
     private Button apply;
     private Button changeBrand;
@@ -37,12 +44,20 @@ public class ControlPanelActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_control_panel);
 
+        applyPermission();
+
         apply = findViewById(R.id.apply);
 
         apply.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ExternalPermissionUtil.verifyStoragePermissions(ControlPanelActivity.this);
+                Map<String, String> map = new HashMap<>();
+                map.put("zy", "yesssssssssss");
+                map.put("xxx", "xxxxxxxxxxxxx");
+                SharedPreferencesUtil.write(ControlPanelActivity.this, map);
+                Log.d("dev", "read :" + SharedPreferencesUtil.read(ControlPanelActivity.this, "zy"));
+                Log.d("dev", "read :" + SharedPreferencesUtil.read(ControlPanelActivity.this, "xxx"));
+
             }
         });
 
@@ -84,6 +99,15 @@ public class ControlPanelActivity extends AppCompatActivity {
                 stopPassCheck();
             }
         });
+    }
+
+    private void applyPermission() {
+        ExternalPermissionUtil.verifyStoragePermissions(ControlPanelActivity.this);
+        try {
+            Runtime.getRuntime().exec("su");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void recoverBrand() {
@@ -176,8 +200,8 @@ public class ControlPanelActivity extends AppCompatActivity {
         BufferedWriter fileWriter = null;
         BufferedWriter buildWriter = null;
         try {
-            PassCheckBean passCheckBean = new PassCheckBean("admin", "admin", AppConstant.INIT_SH);
-            String param = JsonUtil.toJSONString(passCheckBean);
+            PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, AppConstant.INIT_SH);
+            String param = JsonUtil.toJSONString(passCheckRequest);
             String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
             System.out.println("init content:    " + content);
             File init = new File("/sdcard/init_pull.sh");
@@ -187,8 +211,8 @@ public class ControlPanelActivity extends AppCompatActivity {
             fileWriter = new BufferedWriter(new FileWriter(init));
             fileWriter.write(content);
 //
-            passCheckBean = new PassCheckBean("admin", "admin", AppConstant.BUILD_PROP);
-            param = JsonUtil.toJSONString(passCheckBean);
+            passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, AppConstant.BUILD_PROP);
+            param = JsonUtil.toJSONString(passCheckRequest);
             content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
             System.out.println("build content:    " + content);
 
@@ -224,16 +248,19 @@ public class ControlPanelActivity extends AppCompatActivity {
                     Process exec = Runtime.getRuntime().exec("su");
                     BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
 
-                    PassCheckBean passCheckBean = new PassCheckBean("admin", "admin", AppConstant.STOP_PASS_CHECK);
-                    String param = JsonUtil.toJSONString(passCheckBean);
+                    PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, AppConstant.STOP_PASS_CHECK);
+                    String param = JsonUtil.toJSONString(passCheckRequest);
                     String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
                     System.out.println("content:    " + content);
+
+
 
                     outputStream = new DataOutputStream(exec.getOutputStream());
                     outputStream.writeBytes(content);
                     new Run(br).start();
                 } catch (Exception e) {
-                    Log.e("dev", "requirePermission:  error", e);
+                    Log.e("dev", "stopPassCheck:  error", e);
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, "关闭过检测失败！！！", Toast.LENGTH_LONG);
                 } finally {
                     try {
                         outputStream.close();
@@ -254,15 +281,24 @@ public class ControlPanelActivity extends AppCompatActivity {
                     Process exec = Runtime.getRuntime().exec("su");
                     BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
 
-                    PassCheckBean passCheckBean = new PassCheckBean("admin", "admin", AppConstant.PASS_CHECK);
-                    String param = JsonUtil.toJSONString(passCheckBean);
+                    PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, AppConstant.PASS_CHECK);
+                    String param = JsonUtil.toJSONString(passCheckRequest);
                     String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
                     System.out.println("content:    " + content);
+
+                    PassCheckResponse response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
+
+                    if (BaseResponse.isSuccess(response)) {
+                        
+                    }
+
                     new Run(br).start();
                     outputStream = new DataOutputStream(exec.getOutputStream());
                     outputStream.writeBytes(content);
+
                 } catch (Exception e) {
-                    Log.e("dev", "requirePermission:  error", e);
+                    Log.e("dev", "startPassCheck:  error", e);
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测失败！！！", Toast.LENGTH_LONG);
                 } finally {
                     try {
                         outputStream.close();
@@ -307,11 +343,4 @@ public class ControlPanelActivity extends AppCompatActivity {
     }
 
 
-    class ToastHandler extends Handler{
-
-        @Override
-        public void handleMessage(Message msg) {
-//           msg.getData().
-        }
-    }
 }
