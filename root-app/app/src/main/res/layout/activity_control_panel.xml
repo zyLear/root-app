@@ -40,6 +40,18 @@
                 android:layout_height="wrap_content"
                 android:text="使用注意事项" />
 
+            <!--<Button-->
+                <!--android:id="@+id/buyVip"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="修改机型" />-->
+
+            <Button
+                android:id="@+id/activate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="使用卡密" />
+
 
 
             <Button

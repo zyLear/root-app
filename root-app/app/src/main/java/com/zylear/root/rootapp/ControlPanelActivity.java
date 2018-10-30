@@ -38,6 +38,7 @@ public class ControlPanelActivity extends AppCompatActivity {
 
     private Button helper;
     private Button changeBrand;
+    private Button activate;
 //    private Button recoverBrand;
     private Button startPassCheck;
     private Button stopPassCheck;
@@ -55,6 +56,17 @@ public class ControlPanelActivity extends AppCompatActivity {
 
         applyPermission();
         notice = findViewById(R.id.notice);
+
+        activate = findViewById(R.id.activate);
+        activate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ControlPanelActivity.this, ActivateActivity.class);
+                startActivity(intent);
+            }
+        });
+
+
         logout = findViewById(R.id.logout);
 
         logout.setOnClickListener(new View.OnClickListener() {
