@@ -9,25 +9,38 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="20dp"
-        android:paddingTop="50dp"
+        android:paddingTop="10dp"
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/notice"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:text="账号：\nvip到期时间："
-            android:textSize="25sp"
-            android:layout_marginBottom="20dp"
+            android:layout_height="140dp"
+            android:layout_marginBottom="15dp"
+            android:text="账号：\nxxx\nvip到期时间：\nxxxxxxx"
+            android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionMode.Title.Inverse"
+            android:textSize="25sp"
             android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_marginLeft="40dp"
+            android:layout_marginStart="40dp"
+            android:layout_marginRight="40dp"
+            android:layout_marginEnd="40dp">
+
 
 
             <Button
-                android:id="@+id/apply"
+                android:id="@+id/helper"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="applay" />
+                android:text="使用注意事项" />
+
+
 
             <Button
                 android:id="@+id/changeBrand"
@@ -35,11 +48,11 @@
                 android:layout_height="wrap_content"
                 android:text="修改机型" />
 
-            <Button
-                android:id="@+id/recoverBrand"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="恢复机型" />
+            <!--<Button-->
+                <!--android:id="@+id/recoverBrand"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="恢复机型" />-->
 
             <Button
                 android:id="@+id/startPassCheck"
@@ -53,7 +66,16 @@
                 android:layout_height="wrap_content"
                 android:text="关闭过检测" />
 
+            <Button
+                android:id="@+id/logout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="退出登录" />
+
         </LinearLayout>
+
+
+    </LinearLayout>
 
 
 </android.support.constraint.ConstraintLayout>

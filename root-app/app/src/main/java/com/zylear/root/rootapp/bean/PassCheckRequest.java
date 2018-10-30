@@ -2,15 +2,25 @@ package com.zylear.root.rootapp.bean;
 
 public class PassCheckRequest {
 
-    public PassCheckRequest(String account, String password, String codeKey) {
+    public PassCheckRequest(String account, String password, String deviceId, String codeKey) {
         this.account = account;
         this.password = password;
+        this.deviceId = deviceId;
         this.codeKey = codeKey;
     }
 
     private String account;
     private String password;
     private String codeKey;
+    private String deviceId;
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
 
     public String getAccount() {
         return account;

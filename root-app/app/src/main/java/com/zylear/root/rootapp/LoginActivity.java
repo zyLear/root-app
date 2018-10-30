@@ -13,29 +13,35 @@ import android.widget.Toast;
 import com.zylear.root.rootapp.bean.AppCache;
 import com.zylear.root.rootapp.bean.BaseResponse;
 import com.zylear.root.rootapp.bean.LoginRequest;
+import com.zylear.root.rootapp.bean.LoginResponse;
 import com.zylear.root.rootapp.constants.AppConstant;
 import com.zylear.root.rootapp.handler.ToastHandler;
+import com.zylear.root.rootapp.util.DeviceUniqueIdUtil;
+import com.zylear.root.rootapp.util.ExternalPermissionUtil;
 import com.zylear.root.rootapp.util.JsonUtil;
 import com.zylear.root.rootapp.util.OkHttpUtil;
 import com.zylear.root.rootapp.util.SharedPreferencesUtil;
+import com.zylear.root.rootapp.util.StringUtil;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
 
-    Button sureLogin;
-    Button register;
-    EditText account;
-    EditText password;
-    CheckBox autoLogin;
+    private Button sureLogin;
+    private Button register;
+    private EditText account;
+    private EditText password;
+    private CheckBox autoLogin;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        setTitle(getResources().getString(R.string.app_name) + "   " + AppConstant.VERSION);
 
+        applyPermission();
         sureLogin = findViewById(R.id.sureLogin);
         account = findViewById(R.id.loginAccount);
         password = findViewById(R.id.loginPassword);
@@ -69,20 +75,35 @@ public class LoginActivity extends AppCompatActivity {
         final String passwordText = password.getText().toString();
         Log.d("dev", "aaa: " + accountText + "  " + passwordText);
 
+        if (StringUtil.isEmpty(accountText) || StringUtil.isEmpty(passwordText)
+                || !accountText.matches("[a-zA-Z0-9]{6,16}")
+                || !passwordText.matches("[a-zA-Z0-9]{6,16}")
+                /*|| accountText.length() < 6 || accountText.length() > 16
+                || passwordText.length() < 6 || passwordText.length() > 16*/) {
+            ToastHandler.getInstance().show(this, "请输入6到16位字母或数字！！！", Toast.LENGTH_SHORT);
+            return;
+        }
 
         new Thread() {
             @Override
             public void run() {
 
                 try {
+                    String deviceId = DeviceUniqueIdUtil.getDeviceId(LoginActivity.this);
+                    if (StringUtil.isEmpty(deviceId)) {
+                        ToastHandler.getInstance().show(LoginActivity.this, "登录失败，获取设备id出错！", Toast.LENGTH_SHORT);
+                        return;
+                    }
+
                     LoginRequest loginRequest = new LoginRequest();
                     loginRequest.setAccount(accountText);
                     loginRequest.setPassword(passwordText);
+                    loginRequest.setDeviceId(deviceId);
                     String url = AppConstant.HOST + AppConstant.LOGIN;
                     String content = OkHttpUtil.syncExeJsonPostGetString(url, JsonUtil.toJSONString(loginRequest));
-                    BaseResponse baseResponse = JsonUtil.getObjectFromJson(content, BaseResponse.class);
-                    if (BaseResponse.isSuccess(baseResponse)) {
-                        loginSuccess(autoLogin.isChecked(), accountText, passwordText);
+                    LoginResponse response = JsonUtil.getObjectFromJson(content, LoginResponse.class);
+                    if (BaseResponse.isSuccess(response)) {
+                        loginSuccess(autoLogin.isChecked(), accountText, passwordText, response);
                         Intent intent = new Intent(LoginActivity.this, ControlPanelActivity.class);
                         startActivity(intent);
                     } else {
@@ -102,10 +123,13 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 
-    private void loginSuccess(Boolean autoLogin, String accountText, String passwordText) {
+    private void loginSuccess(Boolean autoLogin, String accountText, String passwordText, LoginResponse loginResponse) {
 
         AppCache.account = accountText;
         AppCache.password = passwordText;
+        AppCache.accountInfo = loginResponse.getAccountInfo();
+        AppCache.helper = loginResponse.getHelper();
+
         if (autoLogin) {
             Log.d("dev", "check ");
             Map<String, String> map = new HashMap<>();
@@ -120,6 +144,19 @@ public class LoginActivity extends AppCompatActivity {
             map.put("account", "");
             map.put("password", "");
             SharedPreferencesUtil.write(this, map);
+        }
+    }
+
+    public void onBackPressed() {
+
+    }
+
+    private void applyPermission() {
+        ExternalPermissionUtil.verifyStoragePermissions(LoginActivity.this);
+        try {
+            Runtime.getRuntime().exec("su\n");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

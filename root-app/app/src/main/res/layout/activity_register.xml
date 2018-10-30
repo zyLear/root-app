@@ -33,13 +33,15 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:inputType="textPersonName"
-                android:text="输入账号" />
+                android:maxLength="16"
+                android:hint="输入账号" />
 
             <EditText
                 android:id="@+id/registerPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
+                android:maxLength="16"
                 android:hint="输入密码"
                 android:inputType="textPassword" />
 
@@ -48,6 +50,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
+                android:maxLength="16"
                 android:hint="输入密码"
                 android:inputType="textPassword" />
 

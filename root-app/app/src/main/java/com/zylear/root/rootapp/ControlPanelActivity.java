@@ -1,12 +1,12 @@
 package com.zylear.root.rootapp;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.zylear.root.rootapp.bean.AppCache;
@@ -15,15 +15,18 @@ import com.zylear.root.rootapp.bean.PassCheckRequest;
 import com.zylear.root.rootapp.bean.PassCheckResponse;
 import com.zylear.root.rootapp.constants.AppConstant;
 import com.zylear.root.rootapp.handler.ToastHandler;
+import com.zylear.root.rootapp.util.DeviceUniqueIdUtil;
 import com.zylear.root.rootapp.util.ExternalPermissionUtil;
 import com.zylear.root.rootapp.util.JsonUtil;
 import com.zylear.root.rootapp.util.OkHttpUtil;
 import com.zylear.root.rootapp.util.SharedPreferencesUtil;
+import com.zylear.root.rootapp.util.StringUtil;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -33,31 +36,48 @@ import java.util.Map;
 public class ControlPanelActivity extends AppCompatActivity {
 
 
-    private Button apply;
+    private Button helper;
     private Button changeBrand;
-    private Button recoverBrand;
+//    private Button recoverBrand;
     private Button startPassCheck;
     private Button stopPassCheck;
+    private Button logout;
+    private TextView notice;
+
+    private int sign = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_control_panel);
+        setTitle(getResources().getString(R.string.app_name) + "   " + AppConstant.VERSION);
+
 
         applyPermission();
+        notice = findViewById(R.id.notice);
+        logout = findViewById(R.id.logout);
 
-        apply = findViewById(R.id.apply);
-
-        apply.setOnClickListener(new View.OnClickListener() {
+        logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Map<String, String> map = new HashMap<>();
-                map.put("zy", "yesssssssssss");
-                map.put("xxx", "xxxxxxxxxxxxx");
+                map.put("autoLogin", "false");
+                map.put("account", "");
+                map.put("password", "");
                 SharedPreferencesUtil.write(ControlPanelActivity.this, map);
-                Log.d("dev", "read :" + SharedPreferencesUtil.read(ControlPanelActivity.this, "zy"));
-                Log.d("dev", "read :" + SharedPreferencesUtil.read(ControlPanelActivity.this, "xxx"));
+                Intent integer = new Intent(ControlPanelActivity.this, LoginActivity.class);
+                startActivity(integer);
+            }
+        });
 
+
+        helper = findViewById(R.id.helper);
+
+        helper.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ControlPanelActivity.this, HelperActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -70,15 +90,15 @@ public class ControlPanelActivity extends AppCompatActivity {
             }
         });
 
-        recoverBrand = findViewById(R.id.recoverBrand);
-
-        recoverBrand.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                recoverBrand();
-            }
-        });
+//        recoverBrand = findViewById(R.id.recoverBrand);
+//
+//        recoverBrand.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//
+//                recoverBrand();
+//            }
+//        });
 
         startPassCheck = findViewById(R.id.startPassCheck);
 
@@ -99,12 +119,23 @@ public class ControlPanelActivity extends AppCompatActivity {
                 stopPassCheck();
             }
         });
+
+        checkFirstEnter();
+
+    }
+
+    private void checkFirstEnter() {
+        if (sign > 0) {
+            sign--;
+            Intent intent = new Intent(this, HelperActivity.class);
+            startActivity(intent);
+        }
     }
 
     private void applyPermission() {
         ExternalPermissionUtil.verifyStoragePermissions(ControlPanelActivity.this);
         try {
-            Runtime.getRuntime().exec("su");
+            Runtime.getRuntime().exec("su\n");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -112,49 +143,57 @@ public class ControlPanelActivity extends AppCompatActivity {
 
     private void recoverBrand() {
 
-        DataOutputStream outputStream = null;
-        try {
-            Process exec = Runtime.getRuntime().exec("su");
-            outputStream = new DataOutputStream(exec.getOutputStream());
-            outputStream.writeBytes("mount -o remount rw /\n");
-            outputStream.writeBytes("mount -o remount rw /system\n");
-            if (new File("/sdcard/init_old.sh").exists()) {
-                outputStream.writeBytes("cp /sdcard/init_old.sh /etc/init.sh\n");
-            }
-            if (new File("/sdcard/build_old.prop").exists()) {
-                outputStream.writeBytes("cp /sdcard/build_old.prop /system/build.prop\n");
-            }
-
-//            Process exec = Runtime.getRuntime().exec("su");
-//            outputStream = new DataOutputStream(exec.getOutputStream());
-//            outputStream.writeBytes("mount -o remount rw /\n");
-//            outputStream.writeBytes("mount -o remount rw /system\n");
-//            if (!new File("/sdcard/init_old.sh").exists()) {
-//                outputStream.writeBytes("cp /etc/init.sh /sdcard/init_old.sh\n");
-//            }
-//            if (!new File("/sdcard/build_old.prop").exists()) {
-//                outputStream.writeBytes("cp /system/build.prop /sdcard/build_old.prop\n");
-//            }
-//            pullFile();
-//            outputStream.writeBytes("cp /sdcard/build_pull.prop /system/build.prop\n");
-//            outputStream.writeBytes("chmod 0644 /system/build.prop\n");
-//            outputStream.writeBytes("cp /sdcard/init_pull.sh /etc/init.sh\n");
-//            outputStream.writeBytes("chmod 0755 /etc/init.sh\n");
+        new Thread() {
+            @Override
+            public void run() {
+                DataOutputStream outputStream = null;
+                try {
+                    String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
+                    if (StringUtil.isEmpty(deviceId)) {
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, "恢复机型失败，获取设备id出错！", Toast.LENGTH_SHORT);
+                        return;
+                    }
 
 
-        } catch (Exception e) {
+                    Process exec = Runtime.getRuntime().exec("su\n");
+                    outputStream = new DataOutputStream(exec.getOutputStream());
+                    outputStream.writeBytes("mount -o remount rw /\n");
+                    outputStream.writeBytes("mount -o remount rw /system\n");
+                    if (new File("/sdcard/init_old.sh").exists()) {
+                        outputStream.writeBytes("cp /sdcard/init_old.sh /etc/init.sh\n");
+                    }
+                    if (new File("/sdcard/build_old.prop").exists()) {
+                        outputStream.writeBytes("cp /sdcard/build_old.prop /system/build.prop\n");
+                    }
+                    new Thread(){
+                        @Override
+                        public void run() {
+                            if (checkBrand("/sdcard/init_old.sh", "/etc/init.sh") && checkBrand("/sdcard/build_old.prop", "/system/build.prop")) {
+                                ToastHandler.getInstance().show(ControlPanelActivity.this, "恢复机型成功！", Toast.LENGTH_SHORT);
+                            } else {
+                                ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误！恢复机型失败！", Toast.LENGTH_SHORT);
+                            }
+                        }
+                    }.start();
+
+                } catch (Exception e) {
 //                    Toast.makeText(this, "修改机型失败！！！！", Toast.LENGTH_LONG).show();
-            Log.e("dev", "requirePermission:  error", e);
-        } finally {
-            try {
-                if (outputStream != null) {
-                    outputStream.close();
+                    Log.e("dev", "requirePermission:  error", e);
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, "恢复机型失败！请检查网络和ROOT权限！", Toast.LENGTH_SHORT);
+
+                } finally {
+                    try {
+                        if (outputStream != null) {
+                            outputStream.close();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        }
+        }.start();
     }
+
 
     private void changeBrand() {
 
@@ -163,25 +202,46 @@ public class ControlPanelActivity extends AppCompatActivity {
             public void run() {
                 DataOutputStream outputStream = null;
                 try {
-                    Process exec = Runtime.getRuntime().exec("su");
-                    outputStream = new DataOutputStream(exec.getOutputStream());
-                    outputStream.writeBytes("mount -o remount rw /\n");
-                    outputStream.writeBytes("mount -o remount rw /system\n");
-                    if (!new File("/sdcard/init_old.sh").exists()) {
-                        outputStream.writeBytes("cp /etc/init.sh /sdcard/init_old.sh\n");
+                    String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
+                    if (StringUtil.isEmpty(deviceId)) {
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, "修改机型失败，获取设备id出错！", Toast.LENGTH_SHORT);
+                        return;
                     }
-                    if (!new File("/sdcard/build_old.prop").exists()) {
-                        outputStream.writeBytes("cp /system/build.prop /sdcard/build_old.prop\n");
-                    }
-                    pullFile();
-                    outputStream.writeBytes("cp /sdcard/build_pull.prop /system/build.prop\n");
-                    outputStream.writeBytes("chmod 0644 /system/build.prop\n");
-                    outputStream.writeBytes("cp /sdcard/init_pull.sh /etc/init.sh\n");
-                    outputStream.writeBytes("chmod 0755 /etc/init.sh\n");
 
+                    if (pullFile(deviceId)) {
+                        Process exec = Runtime.getRuntime().exec("su\n");
+                        outputStream = new DataOutputStream(exec.getOutputStream());
+                        outputStream.writeBytes("mount -o remount rw /\n");
+                        outputStream.writeBytes("mount -o remount rw /system\n");
+                        if (!new File("/sdcard/init_old.sh").exists()) {
+                            outputStream.writeBytes("cp /etc/init.sh /sdcard/init_old.sh\n");
+                        }
+                        if (!new File("/sdcard/build_old.prop").exists()) {
+                            outputStream.writeBytes("cp /system/build.prop /sdcard/build_old.prop\n");
+                        }
+
+                        outputStream.writeBytes("cp /sdcard/build_pull.prop /system/build.prop\n");
+                        outputStream.writeBytes("chmod 0644 /system/build.prop\n");
+                        outputStream.writeBytes("cp /sdcard/init_pull.sh /etc/init.sh\n");
+                        outputStream.writeBytes("chmod 0755 /etc/init.sh\n");
+
+                        new Thread(){
+                            @Override
+                            public void run() {
+                                if (checkBrand("/sdcard/build_pull.prop", "/system/build.prop") && checkBrand("/sdcard/init_pull.sh", "/etc/init.sh")) {
+                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "修改机型成功！", Toast.LENGTH_SHORT);
+                                } else {
+                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误！修改机型失败！", Toast.LENGTH_SHORT);
+                                }
+                            }
+                        }.start();
+
+
+                    }
                 } catch (Exception e) {
-//                    Toast.makeText(this, "修改机型失败！！！！", Toast.LENGTH_LONG).show();
                     Log.e("dev", "requirePermission:  error", e);
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, "修改机型失败！请检查网络和ROOT权限！", Toast.LENGTH_SHORT);
+
                 } finally {
                     try {
                         if (outputStream != null) {
@@ -196,46 +256,98 @@ public class ControlPanelActivity extends AppCompatActivity {
 
     }
 
-    private void pullFile() {
-        BufferedWriter fileWriter = null;
-        BufferedWriter buildWriter = null;
+    private boolean checkBrand(String file1, String file2) {
         try {
-            PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, AppConstant.INIT_SH);
-            String param = JsonUtil.toJSONString(passCheckRequest);
-            String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
-            System.out.println("init content:    " + content);
-            File init = new File("/sdcard/init_pull.sh");
-            if (!init.exists()) {
-                init.createNewFile();
-            }
-            fileWriter = new BufferedWriter(new FileWriter(init));
-            fileWriter.write(content);
-//
-            passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, AppConstant.BUILD_PROP);
-            param = JsonUtil.toJSONString(passCheckRequest);
-            content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
-            System.out.println("build content:    " + content);
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        String var1 = readFile(file1);
+        String var2 = readFile(file2);
 
-            File build = new File("/sdcard/build_pull.prop");
-            if (!build.exists()) {
-                build.createNewFile();
+        return !StringUtil.isEmpty(var1) && !StringUtil.isEmpty(var2) && var1.equals(var2);
+    }
+
+    private String readFile(String filePath) {
+        File file = new File(filePath);
+        if (!file.exists()) {
+            return null;
+        }
+        BufferedReader reader = null;
+        StringBuilder stringBuilder = new StringBuilder();
+
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            String string;
+            while ((string = reader.readLine()) != null) {
+                stringBuilder.append(string);
             }
-            buildWriter = new BufferedWriter(new FileWriter(build));
-            buildWriter.write(content);
         } catch (Exception e) {
-            Log.e("dev", "requirePermission:  error", e);
+            e.printStackTrace();
         } finally {
-            try {
-                if (buildWriter != null) {
-                    buildWriter.close();
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                if (fileWriter != null) {
-                    fileWriter.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
+
+        return stringBuilder.toString();
+    }
+
+    private boolean pullFile(String deviceId) throws IOException {
+        BufferedWriter fileWriter = null;
+        BufferedWriter buildWriter = null;
+
+        PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, deviceId, AppConstant.INIT_SH);
+        String param = JsonUtil.toJSONString(passCheckRequest);
+        String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
+        System.out.println("init content:    " + content);
+        PassCheckResponse response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
+        System.out.println("code:    " + response.getContent());
+        if (!BaseResponse.isSuccess(response)) {
+            ToastHandler.getInstance().show(ControlPanelActivity.this, "修改机型" + response.getErrorMessage(), Toast.LENGTH_LONG);
+            return false;
+        }
+
+        File init = new File("/sdcard/init_pull.sh");
+        if (!init.exists()) {
+            init.createNewFile();
+        }
+        fileWriter = new BufferedWriter(new FileWriter(init));
+        fileWriter.write(response.getContent());
+
+        passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, deviceId, AppConstant.BUILD_PROP);
+        param = JsonUtil.toJSONString(passCheckRequest);
+        content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
+        System.out.println("build content:    " + content);
+        response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
+        if (!BaseResponse.isSuccess(response)) {
+            ToastHandler.getInstance().show(ControlPanelActivity.this, "修改机型" + response.getErrorMessage(), Toast.LENGTH_LONG);
+            return false;
+        }
+
+
+        File build = new File("/sdcard/build_pull.prop");
+        if (!build.exists()) {
+            build.createNewFile();
+        }
+        buildWriter = new BufferedWriter(new FileWriter(build));
+        buildWriter.write(response.getContent());
+
+        try {
+            if (buildWriter != null) {
+                buildWriter.close();
+            }
+            if (fileWriter != null) {
+                fileWriter.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 
     private void stopPassCheck() {
@@ -245,22 +357,44 @@ public class ControlPanelActivity extends AppCompatActivity {
             public void run() {
                 DataOutputStream outputStream = null;
                 try {
-                    Process exec = Runtime.getRuntime().exec("su");
-                    BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
+                    String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
+                    if (StringUtil.isEmpty(deviceId)) {
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, "关闭过检测失败，获取设备id出错！", Toast.LENGTH_SHORT);
+                        return;
+                    }
 
-                    PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, AppConstant.STOP_PASS_CHECK);
+                    PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, deviceId, AppConstant.STOP_PASS_CHECK);
                     String param = JsonUtil.toJSONString(passCheckRequest);
                     String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
                     System.out.println("content:    " + content);
+                    final PassCheckResponse response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
+                    System.out.println("code:    " + response.getContent());
 
+                    if (BaseResponse.isSuccess(response)) {
+                        Process exec = Runtime.getRuntime().exec("su\n");
+                        BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
+                        outputStream = new DataOutputStream(exec.getOutputStream());
+                        outputStream.writeBytes(response.getContent());
+//                        new Run(br).start();
+                        new Thread(){
+                            @Override
+                            public void run() {
+                                if (checkCode(response.getContent())) {
+                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "关闭过检测成功！!", Toast.LENGTH_SHORT);
+                                } else {
+                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，关闭过检测失败！!", Toast.LENGTH_SHORT);
+                                }
+                            }
+                        }.start();
 
+                    } else {
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, "关闭过检测" + response.getErrorMessage(), Toast.LENGTH_LONG);
+                    }
 
-                    outputStream = new DataOutputStream(exec.getOutputStream());
-                    outputStream.writeBytes(content);
-                    new Run(br).start();
                 } catch (Exception e) {
                     Log.e("dev", "stopPassCheck:  error", e);
-                    ToastHandler.getInstance().show(ControlPanelActivity.this, "关闭过检测失败！！！", Toast.LENGTH_LONG);
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, "关闭过检测失败！请检查网络和ROOT权限！", Toast.LENGTH_SHORT);
+
                 } finally {
                     try {
                         outputStream.close();
@@ -272,33 +406,54 @@ public class ControlPanelActivity extends AppCompatActivity {
         }.start();
     }
 
+
     private void startPassCheck() {
         new Thread() {
             @Override
             public void run() {
                 DataOutputStream outputStream = null;
                 try {
-                    Process exec = Runtime.getRuntime().exec("su");
-                    BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
 
-                    PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, AppConstant.PASS_CHECK);
+                    String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
+                    if (StringUtil.isEmpty(deviceId)) {
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测失败，获取设备id出错！", Toast.LENGTH_SHORT);
+                        return;
+                    }
+
+
+                    PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, deviceId, AppConstant.PASS_CHECK);
                     String param = JsonUtil.toJSONString(passCheckRequest);
                     String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
                     System.out.println("content:    " + content);
 
-                    PassCheckResponse response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
+                    final PassCheckResponse response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
+                    System.out.println("code:    " + response.getContent());
 
                     if (BaseResponse.isSuccess(response)) {
-                        
+                        Process exec = Runtime.getRuntime().exec("su\n");
+                        BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
+//                        new Run(br).start();
+                        outputStream = new DataOutputStream(exec.getOutputStream());
+                        outputStream.writeBytes(response.getContent());
+                        new Thread(){
+                            @Override
+                            public void run() {
+                                if (checkCode(response.getContent())) {
+                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测成功！!", Toast.LENGTH_SHORT);
+                                } else {
+                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，开启过检测失败！!", Toast.LENGTH_SHORT);
+                                }
+                            }
+                        }.start();
+
+                    } else {
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测" + response.getErrorMessage(), Toast.LENGTH_LONG);
                     }
 
-                    new Run(br).start();
-                    outputStream = new DataOutputStream(exec.getOutputStream());
-                    outputStream.writeBytes(content);
 
                 } catch (Exception e) {
                     Log.e("dev", "startPassCheck:  error", e);
-                    ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测失败！！！", Toast.LENGTH_LONG);
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测失败！请检查网络和ROOT权限！", Toast.LENGTH_SHORT);
                 } finally {
                     try {
                         outputStream.close();
@@ -308,6 +463,45 @@ public class ControlPanelActivity extends AppCompatActivity {
                 }
             }
         }.start();
+    }
+
+    private boolean checkCode(String content) {
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        String[] string = content.split("\n");
+        for (int i = 0; i < string.length; i++) {
+            if (string[i].charAt(0) == 'r') {
+                if (new File(string[i].split(" ")[2]).exists()) {
+                    return false;
+                }
+            } else if (string[i].charAt(0) == 'm') {
+                if (new File(string[i].split(" ")[1]).exists()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+
+    }
+
+
+    @Override
+    protected void onResume() {
+        showNotice();
+        super.onResume();
+    }
+
+    private void showNotice() {
+        notice.setText(AppCache.accountInfo);
+    }
+
+    public void onBackPressed() {
+
     }
 
 

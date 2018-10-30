@@ -1,7 +1,15 @@
 package com.zylear.root.rootapp.util;
 
+import android.app.Activity;
 import android.os.Build;
+import android.widget.Toast;
 
+import com.zylear.root.rootapp.RegisterActivity;
+import com.zylear.root.rootapp.bean.AppCache;
+import com.zylear.root.rootapp.handler.ToastHandler;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class DeviceUniqueIdUtil {
@@ -33,8 +41,28 @@ public class DeviceUniqueIdUtil {
         } catch (Exception exception) {
             //serial需要一个初始化
             return new UUID(m_szDevIDShort.hashCode(), serial.hashCode()).toString();
-
         }
         //使用硬件信息拼凑出来的15位号码
     }
+
+
+    public static String getDeviceId(Activity activity) {
+        String deviceId = AppCache.deviceId;
+        if (StringUtil.isEmpty(deviceId)) {
+            deviceId = SharedPreferencesUtil.read(activity, "deviceId");
+            if (StringUtil.isEmpty(deviceId)) {
+                deviceId = DeviceUniqueIdUtil.getUniquePsuedoID();
+                if (!StringUtil.isEmpty(deviceId)) {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("deviceId", deviceId);
+                    SharedPreferencesUtil.write(activity, map);
+                    AppCache.deviceId = deviceId;
+                }
+            } else {
+                AppCache.deviceId = deviceId;
+            }
+        }
+        return deviceId;
+    }
+
 }

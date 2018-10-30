@@ -6,4 +6,7 @@ public class AppCache {
     public static String password;
     public static String deviceId;
 
+    public static String accountInfo;
+    public static String helper;
+
 }
