@@ -10,6 +10,7 @@ import com.zylear.root.rootapp.bean.BaseResponse;
 import com.zylear.root.rootapp.bean.LoginRequest;
 import com.zylear.root.rootapp.bean.LoginResponse;
 import com.zylear.root.rootapp.constants.AppConstant;
+import com.zylear.root.rootapp.handler.DialogHandler;
 import com.zylear.root.rootapp.handler.ToastHandler;
 import com.zylear.root.rootapp.util.DeviceUniqueIdUtil;
 import com.zylear.root.rootapp.util.ExternalPermissionUtil;
@@ -27,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
         ((TextView) findViewById(R.id.mainText)).setText(getResources().getString(R.string.app_name) + "\n" + AppConstant.VERSION);
         setTitle(getResources().getString(R.string.app_name) + "   " + AppConstant.VERSION);
         ToastHandler.setInstance(new ToastHandler());
-
+        DialogHandler.setInstance(new DialogHandler());
 
 
         new Thread(new Runnable() {
@@ -81,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
                                 AppCache.password = passwordText;
                                 AppCache.accountInfo = response.getAccountInfo();
                                 AppCache.helper = response.getHelper();
+                                AppCache.vipHelper = response.getVipHelper();
                                 Intent intent = new Intent(MainActivity.this, ControlPanelActivity.class);
                                 startActivity(intent);
                                 return;

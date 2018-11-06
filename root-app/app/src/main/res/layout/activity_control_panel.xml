@@ -5,12 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ControlPanelActivity">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="20dp"
-        android:paddingTop="10dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingTop="10dp">
 
         <TextView
             android:id="@+id/notice"
@@ -23,68 +24,140 @@
             android:textSize="25sp"
             android:textStyle="bold" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:layout_marginLeft="40dp"
-            android:layout_marginStart="40dp"
-            android:layout_marginRight="40dp"
-            android:layout_marginEnd="40dp">
-
+        <android.support.v7.widget.GridLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:columnCount="2"
+            app:orientation="horizontal"
+            app:rowCount="6">
 
 
             <Button
                 android:id="@+id/helper"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="使用注意事项" />
-
-            <!--<Button-->
-                <!--android:id="@+id/buyVip"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:text="修改机型" />-->
-
-            <Button
-                android:id="@+id/activate"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="使用卡密" />
-
-
+                android:text="使用注意事项"
+                app:layout_columnSpan="2"
+                app:layout_gravity="fill" />
 
             <Button
                 android:id="@+id/changeBrand"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="修改机型" />
+                android:text="修改机型"
+                app:layout_columnSpan="2"
+                app:layout_gravity="fill" />
 
-            <!--<Button-->
-                <!--android:id="@+id/recoverBrand"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:text="恢复机型" />-->
+            <Button
+                android:id="@+id/buyVip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="开通VIP"
+                app:layout_gravity="fill" />
+
+            <Button
+                android:id="@+id/activate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="使用卡密"
+                app:layout_gravity="fill" />
 
             <Button
                 android:id="@+id/startPassCheck"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="开启过检测" />
+                android:text="开启过检测"
+                app:layout_gravity="fill" />
 
             <Button
                 android:id="@+id/stopPassCheck"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="关闭过检测" />
+                android:text="关闭过检测"
+                app:layout_gravity="fill" />
+
+            <Button
+                android:id="@+id/v2StartPassCheck"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="开启过检测(新版)"
+                app:layout_gravity="fill" />
+
+            <Button
+                android:id="@+id/v2StopPassCheck"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="关闭过检测(新版)"
+                app:layout_gravity="fill" />
 
             <Button
                 android:id="@+id/logout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="退出登录" />
+                android:text="退出登录"
+                app:layout_columnSpan="2"
+                app:layout_gravity="fill" />
 
-        </LinearLayout>
+
+        </android.support.v7.widget.GridLayout>
+
+
+        <!--<LinearLayout-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:orientation="vertical"-->
+        <!--android:layout_marginLeft="40dp"-->
+        <!--android:layout_marginStart="40dp"-->
+        <!--android:layout_marginRight="40dp"-->
+        <!--android:layout_marginEnd="40dp">-->
+
+
+        <!--<Button-->
+        <!--android:id="@+id/helper"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="使用注意事项" />-->
+
+
+        <!--<Button-->
+        <!--android:id="@+id/activate"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="使用卡密" />-->
+
+
+        <!--<Button-->
+        <!--android:id="@+id/changeBrand"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="修改机型" />-->
+
+        <!--&lt;!&ndash;<Button&ndash;&gt;-->
+        <!--&lt;!&ndash;android:id="@+id/recoverBrand"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_width="match_parent"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_height="wrap_content"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:text="恢复机型" />&ndash;&gt;-->
+
+        <!--<Button-->
+        <!--android:id="@+id/startPassCheck"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="开启过检测" />-->
+
+        <!--<Button-->
+        <!--android:id="@+id/stopPassCheck"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="关闭过检测" />-->
+
+        <!--<Button-->
+        <!--android:id="@+id/logout"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="退出登录" />-->
+
+        <!--</LinearLayout>-->
 
 
     </LinearLayout>
