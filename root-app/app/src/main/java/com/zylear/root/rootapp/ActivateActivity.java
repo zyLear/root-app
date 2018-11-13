@@ -1,31 +1,21 @@
 package com.zylear.root.rootapp;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.zylear.root.rootapp.bean.ActivateRequest;
 import com.zylear.root.rootapp.bean.AppCache;
 import com.zylear.root.rootapp.bean.BaseResponse;
-import com.zylear.root.rootapp.bean.LoginRequest;
-import com.zylear.root.rootapp.bean.LoginResponse;
 import com.zylear.root.rootapp.constants.AppConstant;
 import com.zylear.root.rootapp.handler.ToastHandler;
 import com.zylear.root.rootapp.util.DeviceUniqueIdUtil;
-import com.zylear.root.rootapp.util.ExternalPermissionUtil;
 import com.zylear.root.rootapp.util.JsonUtil;
 import com.zylear.root.rootapp.util.OkHttpUtil;
-import com.zylear.root.rootapp.util.SharedPreferencesUtil;
 import com.zylear.root.rootapp.util.StringUtil;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class ActivateActivity extends AppCompatActivity {
 

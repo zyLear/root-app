@@ -24,6 +24,9 @@
             android:textSize="25sp"
             android:textStyle="bold" />
 
+        <!--android:layout_width="wrap_content"-->
+
+
         <android.support.v7.widget.GridLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -51,14 +54,14 @@
 
             <Button
                 android:id="@+id/buyVip"
-                android:layout_width="match_parent"
+                android:layout_width="130dp"
                 android:layout_height="wrap_content"
                 android:text="开通VIP"
                 app:layout_gravity="fill" />
 
             <Button
                 android:id="@+id/activate"
-                android:layout_width="match_parent"
+                android:layout_width="130dp"
                 android:layout_height="wrap_content"
                 android:text="使用卡密"
                 app:layout_gravity="fill" />
@@ -68,6 +71,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="开启过检测"
+                app:layout_columnSpan="2"
                 app:layout_gravity="fill" />
 
             <Button
@@ -75,21 +79,22 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="关闭过检测"
+                app:layout_columnSpan="2"
                 app:layout_gravity="fill" />
 
-            <Button
-                android:id="@+id/v2StartPassCheck"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="开启过检测(新版)"
-                app:layout_gravity="fill" />
+            <!--<Button-->
+            <!--android:id="@+id/v2StartPassCheck"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="开启过检测(新版)"-->
+            <!--app:layout_gravity="fill" />-->
 
-            <Button
-                android:id="@+id/v2StopPassCheck"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="关闭过检测(新版)"
-                app:layout_gravity="fill" />
+            <!--<Button-->
+            <!--android:id="@+id/v2StopPassCheck"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="关闭过检测(新版)"-->
+            <!--app:layout_gravity="fill" />-->
 
             <Button
                 android:id="@+id/logout"
@@ -119,6 +124,11 @@
         <!--android:layout_height="wrap_content"-->
         <!--android:text="使用注意事项" />-->
 
+            <!--<Button-->
+            <!--android:id="@+id/buyVip"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="开通VIP" />-->
 
         <!--<Button-->
         <!--android:id="@+id/activate"-->

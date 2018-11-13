@@ -48,8 +48,8 @@ public class ControlPanelActivity extends AppCompatActivity {
     //    private Button recoverBrand;
     private Button startPassCheck;
     private Button stopPassCheck;
-    private Button v2StartPassCheck;
-    private Button v2StopPassCheck;
+//    private Button v2StartPassCheck;
+//    private Button v2StopPassCheck;
     private Button logout;
 
     private TextView notice;
@@ -152,21 +152,21 @@ public class ControlPanelActivity extends AppCompatActivity {
         });
 
 
-        v2StartPassCheck = findViewById(R.id.v2StartPassCheck);
-        v2StartPassCheck.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startPassCheck(AppConstant.V2_PASS_CHECK);
-            }
-        });
-
-        v2StopPassCheck = findViewById(R.id.v2StopPassCheck);
-        v2StopPassCheck.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                stopPassCheck(AppConstant.V2_STOP_PASS_CHECK);
-            }
-        });
+//        v2StartPassCheck = findViewById(R.id.v2StartPassCheck);
+//        v2StartPassCheck.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                startPassCheck(AppConstant.V2_PASS_CHECK);
+//            }
+//        });
+//
+//        v2StopPassCheck = findViewById(R.id.v2StopPassCheck);
+//        v2StopPassCheck.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                stopPassCheck(AppConstant.V2_STOP_PASS_CHECK);
+//            }
+//        });
 
         checkFirstEnter();
     }
