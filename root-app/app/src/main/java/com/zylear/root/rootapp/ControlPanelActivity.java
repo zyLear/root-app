@@ -2,6 +2,7 @@ package com.zylear.root.rootapp;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class ControlPanelActivity extends AppCompatActivity {
 
@@ -460,6 +462,7 @@ public class ControlPanelActivity extends AppCompatActivity {
         new Thread() {
             @Override
             public void run() {
+//                startPubg();
                 DataOutputStream outputStream = null;
                 try {
 
@@ -480,7 +483,7 @@ public class ControlPanelActivity extends AppCompatActivity {
 
                     if (BaseResponse.isSuccess(response)) {
                         Process exec = Runtime.getRuntime().exec("su\n");
-                        BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
+//                        BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
 //                        new Run(br).start();
                         outputStream = new DataOutputStream(exec.getOutputStream());
                         outputStream.writeBytes(response.getContent());
@@ -494,7 +497,6 @@ public class ControlPanelActivity extends AppCompatActivity {
                                 }
                             }
                         }.start();
-
                     } else {
                         ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测" + response.getErrorMessage(), Toast.LENGTH_LONG);
                     }
@@ -505,13 +507,30 @@ public class ControlPanelActivity extends AppCompatActivity {
                     ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测失败！请检查网络和ROOT权限！", Toast.LENGTH_SHORT);
                 } finally {
                     try {
-                        outputStream.close();
+                        if (outputStream != null) {
+                            outputStream.close();
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             }
         }.start();
+    }
+
+    private void startPubg() {
+        PackageManager packageManager = getPackageManager();
+        Intent launchIntentForPackage = packageManager.getLaunchIntentForPackage("com.tencent.tmgp.pubgmhd");
+        if (launchIntentForPackage == null) {
+            ToastHandler.getInstance().show(this, "请先安装游戏！", Toast.LENGTH_SHORT);
+        } else {
+            startActivity(launchIntentForPackage);
+        }
+        try {
+            TimeUnit.SECONDS.sleep(4);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean checkCode(String content) {
@@ -524,6 +543,9 @@ public class ControlPanelActivity extends AppCompatActivity {
 
         String[] string = content.split("\n");
         for (int i = 0; i < string.length; i++) {
+            if (StringUtil.isEmpty(string[i])) {
+                continue;
+            }
             if (string[i].charAt(0) == 'r') {
                 if (new File(string[i].split(" ")[2]).exists()) {
                     return false;
