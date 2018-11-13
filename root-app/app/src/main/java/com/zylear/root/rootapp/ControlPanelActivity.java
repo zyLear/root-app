@@ -1,7 +1,10 @@
 package com.zylear.root.rootapp;
 
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -14,6 +17,7 @@ import com.zylear.root.rootapp.bean.BaseResponse;
 import com.zylear.root.rootapp.bean.PassCheckRequest;
 import com.zylear.root.rootapp.bean.PassCheckResponse;
 import com.zylear.root.rootapp.constants.AppConstant;
+import com.zylear.root.rootapp.handler.DialogHandler;
 import com.zylear.root.rootapp.handler.ToastHandler;
 import com.zylear.root.rootapp.util.DeviceUniqueIdUtil;
 import com.zylear.root.rootapp.util.ExternalPermissionUtil;
@@ -32,18 +36,24 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class ControlPanelActivity extends AppCompatActivity {
 
 
     private Button helper;
     private Button changeBrand;
+    private Button buyVip;
     private Button activate;
-//    private Button recoverBrand;
+    //    private Button recoverBrand;
     private Button startPassCheck;
     private Button stopPassCheck;
+    private Button v2StartPassCheck;
+    private Button v2StopPassCheck;
     private Button logout;
+
     private TextView notice;
+
 
     private int sign = 1;
 
@@ -56,6 +66,15 @@ public class ControlPanelActivity extends AppCompatActivity {
 
         applyPermission();
         notice = findViewById(R.id.notice);
+
+        buyVip = findViewById(R.id.buyVip);
+        buyVip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buyVip();
+            }
+        });
+
 
         activate = findViewById(R.id.activate);
         activate.setOnClickListener(new View.OnClickListener() {
@@ -118,7 +137,7 @@ public class ControlPanelActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                startPassCheck();
+                startPassCheck(AppConstant.PASS_CHECK);
             }
         });
 
@@ -128,12 +147,32 @@ public class ControlPanelActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                stopPassCheck();
+                stopPassCheck(AppConstant.STOP_PASS_CHECK);
+            }
+        });
+
+
+        v2StartPassCheck = findViewById(R.id.v2StartPassCheck);
+        v2StartPassCheck.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startPassCheck(AppConstant.V2_PASS_CHECK);
+            }
+        });
+
+        v2StopPassCheck = findViewById(R.id.v2StopPassCheck);
+        v2StopPassCheck.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                stopPassCheck(AppConstant.V2_STOP_PASS_CHECK);
             }
         });
 
         checkFirstEnter();
+    }
 
+    private void buyVip() {
+        DialogHandler.getInstance().show(this, AppCache.vipHelper);
     }
 
     private void checkFirstEnter() {
@@ -166,7 +205,6 @@ public class ControlPanelActivity extends AppCompatActivity {
                         return;
                     }
 
-
                     Process exec = Runtime.getRuntime().exec("su\n");
                     outputStream = new DataOutputStream(exec.getOutputStream());
                     outputStream.writeBytes("mount -o remount rw /\n");
@@ -177,7 +215,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                     if (new File("/sdcard/build_old.prop").exists()) {
                         outputStream.writeBytes("cp /sdcard/build_old.prop /system/build.prop\n");
                     }
-                    new Thread(){
+                    new Thread() {
                         @Override
                         public void run() {
                             if (checkBrand("/sdcard/init_old.sh", "/etc/init.sh") && checkBrand("/sdcard/build_old.prop", "/system/build.prop")) {
@@ -237,11 +275,12 @@ public class ControlPanelActivity extends AppCompatActivity {
                         outputStream.writeBytes("cp /sdcard/init_pull.sh /etc/init.sh\n");
                         outputStream.writeBytes("chmod 0755 /etc/init.sh\n");
 
-                        new Thread(){
+                        new Thread() {
                             @Override
                             public void run() {
                                 if (checkBrand("/sdcard/build_pull.prop", "/system/build.prop") && checkBrand("/sdcard/init_pull.sh", "/etc/init.sh")) {
-                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "修改机型成功！", Toast.LENGTH_SHORT);
+//                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "修改机型成功！", Toast.LENGTH_SHORT);
+                                    DialogHandler.getInstance().show(ControlPanelActivity.this, "修改机型成功\n请重启电脑生效！");
                                 } else {
                                     ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误！修改机型失败！", Toast.LENGTH_SHORT);
                                 }
@@ -362,7 +401,7 @@ public class ControlPanelActivity extends AppCompatActivity {
         return true;
     }
 
-    private void stopPassCheck() {
+    private void stopPassCheck(final String codeKey) {
 
         new Thread() {
             @Override
@@ -375,7 +414,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                         return;
                     }
 
-                    PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, deviceId, AppConstant.STOP_PASS_CHECK);
+                    PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, deviceId, codeKey);
                     String param = JsonUtil.toJSONString(passCheckRequest);
                     String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
                     System.out.println("content:    " + content);
@@ -388,7 +427,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                         outputStream = new DataOutputStream(exec.getOutputStream());
                         outputStream.writeBytes(response.getContent());
 //                        new Run(br).start();
-                        new Thread(){
+                        new Thread() {
                             @Override
                             public void run() {
                                 if (checkCode(response.getContent())) {
@@ -419,10 +458,11 @@ public class ControlPanelActivity extends AppCompatActivity {
     }
 
 
-    private void startPassCheck() {
+    private void startPassCheck(final String codeKey) {
         new Thread() {
             @Override
             public void run() {
+//                startPubg();
                 DataOutputStream outputStream = null;
                 try {
 
@@ -433,7 +473,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                     }
 
 
-                    PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, deviceId, AppConstant.PASS_CHECK);
+                    PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, deviceId, codeKey);
                     String param = JsonUtil.toJSONString(passCheckRequest);
                     String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
                     System.out.println("content:    " + content);
@@ -443,11 +483,11 @@ public class ControlPanelActivity extends AppCompatActivity {
 
                     if (BaseResponse.isSuccess(response)) {
                         Process exec = Runtime.getRuntime().exec("su\n");
-                        BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
+//                        BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
 //                        new Run(br).start();
                         outputStream = new DataOutputStream(exec.getOutputStream());
                         outputStream.writeBytes(response.getContent());
-                        new Thread(){
+                        new Thread() {
                             @Override
                             public void run() {
                                 if (checkCode(response.getContent())) {
@@ -457,7 +497,6 @@ public class ControlPanelActivity extends AppCompatActivity {
                                 }
                             }
                         }.start();
-
                     } else {
                         ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测" + response.getErrorMessage(), Toast.LENGTH_LONG);
                     }
@@ -468,13 +507,30 @@ public class ControlPanelActivity extends AppCompatActivity {
                     ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测失败！请检查网络和ROOT权限！", Toast.LENGTH_SHORT);
                 } finally {
                     try {
-                        outputStream.close();
+                        if (outputStream != null) {
+                            outputStream.close();
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             }
         }.start();
+    }
+
+    private void startPubg() {
+        PackageManager packageManager = getPackageManager();
+        Intent launchIntentForPackage = packageManager.getLaunchIntentForPackage("com.tencent.tmgp.pubgmhd");
+        if (launchIntentForPackage == null) {
+            ToastHandler.getInstance().show(this, "请先安装游戏！", Toast.LENGTH_SHORT);
+        } else {
+            startActivity(launchIntentForPackage);
+        }
+        try {
+            TimeUnit.SECONDS.sleep(4);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean checkCode(String content) {
@@ -487,6 +543,9 @@ public class ControlPanelActivity extends AppCompatActivity {
 
         String[] string = content.split("\n");
         for (int i = 0; i < string.length; i++) {
+            if (StringUtil.isEmpty(string[i])) {
+                continue;
+            }
             if (string[i].charAt(0) == 'r') {
                 if (new File(string[i].split(" ")[2]).exists()) {
                     return false;

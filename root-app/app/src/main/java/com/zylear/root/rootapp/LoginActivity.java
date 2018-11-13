@@ -77,9 +77,7 @@ public class LoginActivity extends AppCompatActivity {
 
         if (StringUtil.isEmpty(accountText) || StringUtil.isEmpty(passwordText)
                 || !accountText.matches("[a-zA-Z0-9]{6,16}")
-                || !passwordText.matches("[a-zA-Z0-9]{6,16}")
-                /*|| accountText.length() < 6 || accountText.length() > 16
-                || passwordText.length() < 6 || passwordText.length() > 16*/) {
+                || !passwordText.matches("[a-zA-Z0-9]{6,16}")) {
             ToastHandler.getInstance().show(this, "请输入6到16位字母或数字！！！", Toast.LENGTH_SHORT);
             return;
         }
@@ -129,6 +127,7 @@ public class LoginActivity extends AppCompatActivity {
         AppCache.password = passwordText;
         AppCache.accountInfo = loginResponse.getAccountInfo();
         AppCache.helper = loginResponse.getHelper();
+        AppCache.vipHelper = loginResponse.getVipHelper();
 
         if (autoLogin) {
             Log.d("dev", "check ");

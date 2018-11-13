@@ -9,4 +9,5 @@ public class AppCache {
     public static String accountInfo;
     public static String helper;
 
+    public static String vipHelper;
 }
