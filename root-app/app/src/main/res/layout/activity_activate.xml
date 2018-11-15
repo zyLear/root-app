@@ -44,8 +44,7 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:maxLength="16"
-                android:hint="输入卡密"
-                android:inputType="textPassword" />
+                android:hint="输入卡密" />
 
 
 
