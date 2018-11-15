@@ -8,6 +8,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.zylear.root.rootapp.bean.ActivateRequest;
+import com.zylear.root.rootapp.bean.ActivateResponse;
 import com.zylear.root.rootapp.bean.AppCache;
 import com.zylear.root.rootapp.bean.BaseResponse;
 import com.zylear.root.rootapp.constants.AppConstant;
@@ -90,9 +91,10 @@ public class ActivateActivity extends AppCompatActivity {
                     activateRequest.setDeviceId(deviceId);
                     String url = AppConstant.HOST + AppConstant.ACTIVATE_CARD;
                     String content = OkHttpUtil.syncExeJsonPostGetString(url, JsonUtil.toJSONString(activateRequest));
-                    BaseResponse response = JsonUtil.getObjectFromJson(content, BaseResponse.class);
+                    ActivateResponse response = JsonUtil.getObjectFromJson(content, ActivateResponse.class);
                     if (BaseResponse.isSuccess(response)) {
-                        ToastHandler.getInstance().show(ActivateActivity.this, "开通VIP成功，请重新登录使用", Toast.LENGTH_SHORT);
+                        AppCache.accountInfo = response.getAccountInfo();
+                        ToastHandler.getInstance().show(ActivateActivity.this, "开通VIP成功!", Toast.LENGTH_SHORT);
                     } else {
                         ToastHandler.getInstance().show(ActivateActivity.this, "开通VIP" + response.getErrorMessage(), Toast.LENGTH_SHORT);
                     }

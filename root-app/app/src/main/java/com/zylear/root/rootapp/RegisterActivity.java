@@ -56,7 +56,6 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
 
-
     private void register() {
         final String accountText = account.getText().toString();
         final String passwordText = password.getText().toString();
@@ -69,9 +68,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         if (StringUtil.isEmpty(accountText) || StringUtil.isEmpty(passwordText)
                 || !accountText.matches("[a-zA-Z0-9]{6,16}")
-                || !passwordText.matches("[a-zA-Z0-9]{6,16}")
-               /* || accountText.length() < 6 || accountText.length() > 16
-                || passwordText.length() < 6 || passwordText.length() > 16*/) {
+                || !passwordText.matches("[a-zA-Z0-9]{6,16}")) {
             ToastHandler.getInstance().show(this, "请输入6到16位字母或数字！！！", Toast.LENGTH_SHORT);
             return;
         }
@@ -100,9 +97,8 @@ public class RegisterActivity extends AppCompatActivity {
                     BaseResponse baseResponse = JsonUtil.getObjectFromJson(content, BaseResponse.class);
                     if (BaseResponse.isSuccess(baseResponse)) {
                         ToastHandler.getInstance().show(RegisterActivity.this, "注册成功!", Toast.LENGTH_SHORT);
-
                     } else {
-                        ToastHandler.getInstance().show(RegisterActivity.this, baseResponse.getErrorMessage(), Toast.LENGTH_SHORT);
+                        ToastHandler.getInstance().show(RegisterActivity.this, "注册" + baseResponse.getErrorMessage(), Toast.LENGTH_SHORT);
                     }
 
 

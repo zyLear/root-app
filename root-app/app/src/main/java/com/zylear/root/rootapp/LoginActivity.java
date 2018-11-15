@@ -105,7 +105,7 @@ public class LoginActivity extends AppCompatActivity {
                         Intent intent = new Intent(LoginActivity.this, ControlPanelActivity.class);
                         startActivity(intent);
                     } else {
-                        ToastHandler.getInstance().show(LoginActivity.this, "账号密码错误！", Toast.LENGTH_SHORT);
+                        ToastHandler.getInstance().show(LoginActivity.this, "登录" + response.getErrorMessage(), Toast.LENGTH_SHORT);
                     }
 
 
