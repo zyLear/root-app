@@ -82,6 +82,14 @@
                 app:layout_columnSpan="2"
                 app:layout_gravity="fill" />
 
+            <Button
+                android:id="@+id/startPassCheck2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="开启新增过检测"
+                app:layout_columnSpan="2"
+                app:layout_gravity="fill" />
+
             <!--<Button-->
             <!--android:id="@+id/v2StartPassCheck"-->
             <!--android:layout_width="match_parent"-->
