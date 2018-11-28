@@ -46,7 +46,7 @@ public class ControlPanelActivity extends AppCompatActivity {
     //    private Button recoverBrand;
     private Button startPassCheck;
     private Button stopPassCheck;
-//    private Button v2StartPassCheck;
+    //    private Button v2StartPassCheck;
 //    private Button v2StopPassCheck;
     private Button logout;
 
@@ -135,7 +135,7 @@ public class ControlPanelActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                startPassCheck(AppConstant.PASS_CHECK);
+                startPassCheck(AppConstant.V2_PASS_CHECK);
             }
         });
 
@@ -145,7 +145,7 @@ public class ControlPanelActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                stopPassCheck(AppConstant.STOP_PASS_CHECK);
+                stopPassCheck(AppConstant.V2_STOP_PASS_CHECK);
             }
         });
 
@@ -170,7 +170,10 @@ public class ControlPanelActivity extends AppCompatActivity {
     }
 
     private void buyVip() {
-        DialogHandler.getInstance().show(this, AppCache.vipHelper);
+//        DialogHandler.getInstance().show(this, AppCache.vipHelper);
+        startPassCheck(AppConstant.PASS_CHECK2);
+
+
     }
 
     private void checkFirstEnter() {
@@ -488,11 +491,17 @@ public class ControlPanelActivity extends AppCompatActivity {
                         new Thread() {
                             @Override
                             public void run() {
-                                if (checkCode(response.getContent())) {
+
+                                if (AppConstant.PASS_CHECK2.equals(codeKey)) {
                                     ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测成功！!", Toast.LENGTH_SHORT);
                                 } else {
-                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，开启过检测失败！!", Toast.LENGTH_SHORT);
+                                    if (checkCode(response.getContent())) {
+                                        ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测成功！!", Toast.LENGTH_SHORT);
+                                    } else {
+                                        ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，开启过检测失败！!", Toast.LENGTH_SHORT);
+                                    }
                                 }
+
                             }
                         }.start();
                     } else {
