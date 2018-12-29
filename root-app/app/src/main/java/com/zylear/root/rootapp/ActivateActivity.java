@@ -111,4 +111,8 @@ public class ActivateActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onBackPressed() {
+
+    }
 }

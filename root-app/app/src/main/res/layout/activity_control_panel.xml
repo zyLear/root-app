@@ -11,13 +11,13 @@
         android:layout_height="match_parent"
         android:layout_margin="20dp"
         android:orientation="vertical"
-        android:paddingTop="10dp">
+        android:paddingTop="5dp">
 
         <TextView
             android:id="@+id/notice"
             android:layout_width="match_parent"
             android:layout_height="140dp"
-            android:layout_marginBottom="15dp"
+            android:layout_marginBottom="5dp"
             android:text="账号：\nxxx\nvip到期时间：\nxxxxxxx"
             android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionMode.Title.Inverse"
@@ -53,6 +53,18 @@
                 app:layout_gravity="fill" />
 
             <Button
+                android:id="@+id/pullHosts"
+                android:layout_height="wrap_content"
+                android:text="加载数据拦截"
+                app:layout_gravity="fill" />
+
+            <Button
+                android:id="@+id/recoverHosts"
+                android:layout_height="wrap_content"
+                android:text="关闭数据拦截"
+                app:layout_gravity="fill" />
+
+            <Button
                 android:id="@+id/buyVip"
                 android:layout_width="130dp"
                 android:layout_height="wrap_content"
@@ -71,7 +83,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="开启过检测"
-                app:layout_columnSpan="2"
+                app:layout_columnSpan="1"
                 app:layout_gravity="fill" />
 
             <Button
@@ -79,7 +91,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="关闭过检测"
-                app:layout_columnSpan="2"
+                app:layout_columnSpan="1"
+                app:layout_gravity="fill" />
+
+            <Button
+                android:id="@+id/startPlugin"
+                android:layout_height="wrap_content"
+                android:text="启动刺激战场"
+                app:layout_gravity="fill" />
+
+            <Button
+                android:id="@+id/repairPubg"
+                android:layout_height="wrap_content"
+                android:text="修复刺激战场"
                 app:layout_gravity="fill" />
 
             <Button

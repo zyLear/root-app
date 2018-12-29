@@ -46,10 +46,15 @@ public class ControlPanelActivity extends AppCompatActivity {
     //    private Button recoverBrand;
     private Button startPassCheck;
     private Button stopPassCheck;
-//    private Button v2StartPassCheck;
+    //    private Button v2StartPassCheck;
 //    private Button v2StopPassCheck;
     private Button startPassCheck2;
     private Button logout;
+
+    private Button startPlugin;
+    private Button repairPubg;
+    private Button pullHosts;
+    private Button recoverHosts;
 
     private TextView notice;
 
@@ -136,7 +141,7 @@ public class ControlPanelActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                startPassCheck(AppConstant.PASS_CHECK);
+                startPassCheck(false, AppConstant.PASS_CHECK, "开启过检测");
             }
         });
 
@@ -146,7 +151,7 @@ public class ControlPanelActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                stopPassCheck(AppConstant.STOP_PASS_CHECK);
+                stopPassCheck(AppConstant.STOP_PASS_CHECK, "关闭过检测");
             }
         });
 
@@ -155,7 +160,39 @@ public class ControlPanelActivity extends AppCompatActivity {
         startPassCheck2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startPassCheck(AppConstant.PASS_CHECK2);
+                startPassCheck(false, AppConstant.PASS_CHECK2, "开启新增过检测");
+            }
+        });
+
+        pullHosts = findViewById(R.id.pullHosts);
+        pullHosts.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                pullHosts();
+            }
+        });
+
+        recoverHosts = findViewById(R.id.recoverHosts);
+        recoverHosts.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                recoverHosts();
+            }
+        });
+
+        startPlugin = findViewById(R.id.startPlugin);
+        startPlugin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startPassCheck(true, AppConstant.START_PLUGIN, "防封拦截");
+            }
+        });
+
+        repairPubg = findViewById(R.id.repairPubg);
+        repairPubg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                stopPassCheck(AppConstant.REPAIR_PUBG, "修复游戏");
             }
         });
 
@@ -177,6 +214,146 @@ public class ControlPanelActivity extends AppCompatActivity {
 //        });
 
         checkFirstEnter();
+    }
+
+    private void recoverHosts() {
+
+        new Thread() {
+            @Override
+            public void run() {
+                DataOutputStream outputStream = null;
+                try {
+                    String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
+                    if (StringUtil.isEmpty(deviceId)) {
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, "关闭数据拦截失败，获取设备id出错！", Toast.LENGTH_SHORT);
+                        return;
+                    }
+
+                    Process exec = Runtime.getRuntime().exec("su\n");
+                    outputStream = new DataOutputStream(exec.getOutputStream());
+                    outputStream.writeBytes("mount -o remount rw /\n");
+                    outputStream.writeBytes("mount -o remount rw /system\n");
+                    if (new File("/sdcard/hosts_old").exists()) {
+                        outputStream.writeBytes("cp /sdcard/hosts_old /system/etc/hosts\n");
+                    }
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            if (checkFile("/sdcard/hosts_old", "/system/etc/hosts")) {
+//                                ToastHandler.getInstance().show(ControlPanelActivity.this, "关闭数据拦截成功！", Toast.LENGTH_SHORT);
+                                DialogHandler.getInstance().show(ControlPanelActivity.this, "关闭数据拦截成功\n请重启电脑生效！");
+                            } else {
+                                ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误！关闭数据拦截失败！", Toast.LENGTH_SHORT);
+                            }
+                        }
+                    }.start();
+
+                } catch (Exception e) {
+                    Log.e("dev", "requirePermission:  error", e);
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, "关闭数据拦截失败！请检查网络和ROOT权限！", Toast.LENGTH_SHORT);
+
+                } finally {
+                    try {
+                        if (outputStream != null) {
+                            outputStream.close();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
+
+
+    }
+
+    private void pullHosts() {
+        new Thread() {
+            @Override
+            public void run() {
+                DataOutputStream outputStream = null;
+                try {
+                    String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
+                    if (StringUtil.isEmpty(deviceId)) {
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, "加载数据拦截失败，获取设备id出错！", Toast.LENGTH_SHORT);
+                        return;
+                    }
+
+                    if (pullHostsFile(deviceId)) {
+                        Process exec = Runtime.getRuntime().exec("su\n");
+                        outputStream = new DataOutputStream(exec.getOutputStream());
+                        outputStream.writeBytes("mount -o remount rw /\n");
+                        outputStream.writeBytes("mount -o remount rw /system\n");
+                        if (!new File("/sdcard/hosts_old").exists()) {
+                            outputStream.writeBytes("cp /system/etc/hosts /sdcard/hosts_old\n");
+                        }
+                        outputStream.writeBytes("cp /sdcard/hosts_pull /system/etc/hosts\n");
+
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                if (checkFile("/sdcard/hosts_pull", "/system/etc/hosts")) {
+//                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "修改机型成功！", Toast.LENGTH_SHORT);
+                                    DialogHandler.getInstance().show(ControlPanelActivity.this, "加载数据拦截成功\n请重启电脑生效！");
+                                } else {
+                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误！加载数据拦截失败！", Toast.LENGTH_SHORT);
+                                }
+                            }
+                        }.start();
+
+
+                    }
+                } catch (Exception e) {
+                    Log.e("dev", "requirePermission:  error", e);
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, "加载数据拦截失败！请检查网络和ROOT权限！", Toast.LENGTH_SHORT);
+
+                } finally {
+                    try {
+                        if (outputStream != null) {
+                            outputStream.close();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
+
+
+    }
+
+    private boolean pullHostsFile(String deviceId) throws IOException {
+
+        BufferedWriter hostWriter = null;
+
+        PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, deviceId, AppConstant.HOSTS_CODE);
+        String param = JsonUtil.toJSONString(passCheckRequest);
+        String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
+        System.out.println("init content:    " + content);
+        PassCheckResponse response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
+        System.out.println("code:    " + response.getContent());
+        if (!BaseResponse.isSuccess(response)) {
+            ToastHandler.getInstance().show(ControlPanelActivity.this, "加载数据拦截" + response.getErrorMessage(), Toast.LENGTH_LONG);
+            return false;
+        }
+
+        File init = new File("/sdcard/hosts_pull");
+        if (!init.exists()) {
+            init.createNewFile();
+        }
+        hostWriter = new BufferedWriter(new FileWriter(init));
+        hostWriter.write(response.getContent());
+
+        try {
+            if (hostWriter != null) {
+                hostWriter.close();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return true;
+
     }
 
     private void buyVip() {
@@ -226,7 +403,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                     new Thread() {
                         @Override
                         public void run() {
-                            if (checkBrand("/sdcard/init_old.sh", "/etc/init.sh") && checkBrand("/sdcard/build_old.prop", "/system/build.prop")) {
+                            if (checkFile("/sdcard/init_old.sh", "/etc/init.sh") && checkFile("/sdcard/build_old.prop", "/system/build.prop")) {
                                 ToastHandler.getInstance().show(ControlPanelActivity.this, "恢复机型成功！", Toast.LENGTH_SHORT);
                             } else {
                                 ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误！恢复机型失败！", Toast.LENGTH_SHORT);
@@ -286,7 +463,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                         new Thread() {
                             @Override
                             public void run() {
-                                if (checkBrand("/sdcard/build_pull.prop", "/system/build.prop") && checkBrand("/sdcard/init_pull.sh", "/etc/init.sh")) {
+                                if (checkFile("/sdcard/build_pull.prop", "/system/build.prop") && checkFile("/sdcard/init_pull.sh", "/etc/init.sh")) {
 //                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "修改机型成功！", Toast.LENGTH_SHORT);
                                     DialogHandler.getInstance().show(ControlPanelActivity.this, "修改机型成功\n请重启电脑生效！");
                                 } else {
@@ -315,7 +492,7 @@ public class ControlPanelActivity extends AppCompatActivity {
 
     }
 
-    private boolean checkBrand(String file1, String file2) {
+    private boolean checkFile(String file1, String file2) {
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
@@ -409,7 +586,7 @@ public class ControlPanelActivity extends AppCompatActivity {
         return true;
     }
 
-    private void stopPassCheck(final String codeKey) {
+    private void stopPassCheck(final String codeKey, final String prompt) {
 
         new Thread() {
             @Override
@@ -418,7 +595,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                 try {
                     String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
                     if (StringUtil.isEmpty(deviceId)) {
-                        ToastHandler.getInstance().show(ControlPanelActivity.this, "关闭过检测失败，获取设备id出错！", Toast.LENGTH_SHORT);
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "失败，获取设备id出错！", Toast.LENGTH_SHORT);
                         return;
                     }
 
@@ -431,7 +608,6 @@ public class ControlPanelActivity extends AppCompatActivity {
 
                     if (BaseResponse.isSuccess(response)) {
                         Process exec = Runtime.getRuntime().exec("su\n");
-                        BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
                         outputStream = new DataOutputStream(exec.getOutputStream());
                         outputStream.writeBytes(response.getContent());
 //                        new Run(br).start();
@@ -439,20 +615,20 @@ public class ControlPanelActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 if (checkCode(response.getContent())) {
-                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "关闭过检测成功！!", Toast.LENGTH_SHORT);
+                                    ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "成功！!", Toast.LENGTH_SHORT);
                                 } else {
-                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，关闭过检测失败！!", Toast.LENGTH_SHORT);
+                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，" + prompt + "失败！!", Toast.LENGTH_SHORT);
                                 }
                             }
                         }.start();
 
                     } else {
-                        ToastHandler.getInstance().show(ControlPanelActivity.this, "关闭过检测" + response.getErrorMessage(), Toast.LENGTH_LONG);
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + response.getErrorMessage(), Toast.LENGTH_LONG);
                     }
 
                 } catch (Exception e) {
                     Log.e("dev", "stopPassCheck:  error", e);
-                    ToastHandler.getInstance().show(ControlPanelActivity.this, "关闭过检测失败！请检查网络和ROOT权限！", Toast.LENGTH_SHORT);
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "失败！请检查网络和ROOT权限！", Toast.LENGTH_SHORT);
 
                 } finally {
                     try {
@@ -468,17 +644,16 @@ public class ControlPanelActivity extends AppCompatActivity {
     }
 
 
-    private void startPassCheck(final String codeKey) {
+    private void startPassCheck(final Boolean startupPubg, final String codeKey, final String prompt) {
         new Thread() {
             @Override
             public void run() {
-//                startPubg();
                 DataOutputStream outputStream = null;
                 try {
 
                     String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
                     if (StringUtil.isEmpty(deviceId)) {
-                        ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测失败，获取设备id出错！", Toast.LENGTH_SHORT);
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "失败，获取设备id出错！", Toast.LENGTH_SHORT);
                         return;
                     }
 
@@ -492,6 +667,9 @@ public class ControlPanelActivity extends AppCompatActivity {
                     System.out.println("code:    " + response.getContent());
 
                     if (BaseResponse.isSuccess(response)) {
+                        if (startupPubg) {
+                            startPubg(2);
+                        }
                         Process exec = Runtime.getRuntime().exec("su\n");
 //                        BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
 //                        new Run(br).start();
@@ -500,25 +678,25 @@ public class ControlPanelActivity extends AppCompatActivity {
                         new Thread() {
                             @Override
                             public void run() {
-                                if (AppConstant.PASS_CHECK2.equals(codeKey)) {
-                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测成功！!", Toast.LENGTH_SHORT);
-                                }else {
-                                    if (checkCode(response.getContent())) {
-                                        ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测成功！!", Toast.LENGTH_SHORT);
-                                    } else {
-                                        ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，开启过检测失败！!", Toast.LENGTH_SHORT);
-                                    }
+//                                if (AppConstant.PASS_CHECK2.equals(codeKey)) {
+//                                    ToastHandler.getInstance().show(ControlPanelActivity.this, prompt+"成功！!", Toast.LENGTH_SHORT);
+//                                } else {
+                                if (checkCode(response.getContent())) {
+                                    ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "成功！!", Toast.LENGTH_SHORT);
+                                } else {
+                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，" + prompt + "失败！!", Toast.LENGTH_SHORT);
                                 }
+//                                }
                             }
                         }.start();
                     } else {
-                        ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测" + response.getErrorMessage(), Toast.LENGTH_LONG);
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + response.getErrorMessage(), Toast.LENGTH_LONG);
                     }
 
 
                 } catch (Exception e) {
                     Log.e("dev", "startPassCheck:  error", e);
-                    ToastHandler.getInstance().show(ControlPanelActivity.this, "开启过检测失败！请检查网络和ROOT权限！", Toast.LENGTH_SHORT);
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "失败！请检查网络和ROOT权限！", Toast.LENGTH_SHORT);
                 } finally {
                     try {
                         if (outputStream != null) {
@@ -532,7 +710,7 @@ public class ControlPanelActivity extends AppCompatActivity {
         }.start();
     }
 
-    private void startPubg() {
+    private void startPubg(Integer time) {
         PackageManager packageManager = getPackageManager();
         Intent launchIntentForPackage = packageManager.getLaunchIntentForPackage("com.tencent.tmgp.pubgmhd");
         if (launchIntentForPackage == null) {
@@ -541,7 +719,7 @@ public class ControlPanelActivity extends AppCompatActivity {
             startActivity(launchIntentForPackage);
         }
         try {
-            TimeUnit.SECONDS.sleep(4);
+            TimeUnit.SECONDS.sleep(time);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
