@@ -810,10 +810,12 @@ public class ControlPanelActivity extends AppCompatActivity {
                 ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败,请关闭游戏!!", Toast.LENGTH_SHORT);
             } else if (!put(outputStream, pid1, pid2)) {
                 ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败,请关闭游戏!!", Toast.LENGTH_SHORT);
+            }else {
+                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测成功!!", Toast.LENGTH_SHORT);
             }
 
         } catch (Exception e) {
-            ToastHandler.getInstance().show(ControlPanelActivity.this, "获取进程id失败，失败！!", Toast.LENGTH_SHORT);
+            ToastHandler.getInstance().show(ControlPanelActivity.this, "获取进程id失败，请关闭游戏！!", Toast.LENGTH_SHORT);
         } finally {
             try {
                 if (outputStream != null) {
