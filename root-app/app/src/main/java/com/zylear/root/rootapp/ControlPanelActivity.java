@@ -26,12 +26,17 @@ import com.zylear.root.rootapp.util.StringUtil;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -51,10 +56,10 @@ public class ControlPanelActivity extends AppCompatActivity {
     private Button startPassCheck2;
     private Button logout;
 
-    private Button startPlugin;
-    private Button repairPubg;
-    private Button pullHosts;
-    private Button recoverHosts;
+//    private Button startPlugin;
+//    private Button repairPubg;
+//    private Button pullHosts;
+//    private Button recoverHosts;
 
     private TextView notice;
 
@@ -141,7 +146,7 @@ public class ControlPanelActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                startPassCheck(false, AppConstant.PASS_CHECK, "开启过检测");
+                startPassCheck(true, AppConstant.PASS_CHECK, "开启过检测");
             }
         });
 
@@ -164,37 +169,37 @@ public class ControlPanelActivity extends AppCompatActivity {
             }
         });
 
-        pullHosts = findViewById(R.id.pullHosts);
-        pullHosts.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                pullHosts();
-            }
-        });
-
-        recoverHosts = findViewById(R.id.recoverHosts);
-        recoverHosts.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                recoverHosts();
-            }
-        });
-
-        startPlugin = findViewById(R.id.startPlugin);
-        startPlugin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startPassCheck(true, AppConstant.START_PLUGIN, "防封拦截");
-            }
-        });
-
-        repairPubg = findViewById(R.id.repairPubg);
-        repairPubg.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                stopPassCheck(AppConstant.REPAIR_PUBG, "修复游戏");
-            }
-        });
+//        pullHosts = findViewById(R.id.pullHosts);
+//        pullHosts.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                pullHosts();
+//            }
+//        });
+//
+//        recoverHosts = findViewById(R.id.recoverHosts);
+//        recoverHosts.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                recoverHosts();
+//            }
+//        });
+//
+//        startPlugin = findViewById(R.id.startPlugin);
+//        startPlugin.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                startPassCheck(true, AppConstant.START_PLUGIN, "防封拦截");
+//            }
+//        });
+//
+//        repairPubg = findViewById(R.id.repairPubg);
+//        repairPubg.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                stopPassCheck(AppConstant.REPAIR_PUBG, "修复游戏");
+//            }
+//        });
 
 
 //        v2StartPassCheck = findViewById(R.id.v2StartPassCheck);
@@ -644,6 +649,72 @@ public class ControlPanelActivity extends AppCompatActivity {
     }
 
 
+//    private void startPassCheck(final Boolean startupPubg, final String codeKey, final String prompt) {
+//        new Thread() {
+//            @Override
+//            public void run() {
+//                DataOutputStream outputStream = null;
+//                try {
+//
+//                    String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
+//                    if (StringUtil.isEmpty(deviceId)) {
+//                        ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "失败，获取设备id出错！", Toast.LENGTH_SHORT);
+//                        return;
+//                    }
+//
+//
+//                    PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, deviceId, codeKey);
+//                    String param = JsonUtil.toJSONString(passCheckRequest);
+//                    String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
+//                    System.out.println("content:    " + content);
+//
+//                    final PassCheckResponse response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
+//                    System.out.println("code:    " + response.getContent());
+//
+//                    if (BaseResponse.isSuccess(response)) {
+//                        if (startupPubg) {
+//                            startPubg(2);
+//                        }
+//                        Process exec = Runtime.getRuntime().exec("su\n");
+////                        BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
+////                        new Run(br).start();
+//                        outputStream = new DataOutputStream(exec.getOutputStream());
+//                        outputStream.writeBytes(response.getContent());
+//                        new Thread() {
+//                            @Override
+//                            public void run() {
+////                                if (AppConstant.PASS_CHECK2.equals(codeKey)) {
+////                                    ToastHandler.getInstance().show(ControlPanelActivity.this, prompt+"成功！!", Toast.LENGTH_SHORT);
+////                                } else {
+//                                if (checkCode(response.getContent())) {
+//                                    ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "成功！!", Toast.LENGTH_SHORT);
+//                                } else {
+//                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，" + prompt + "失败！!", Toast.LENGTH_SHORT);
+//                                }
+////                                }
+//                            }
+//                        }.start();
+//                    } else {
+//                        ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + response.getErrorMessage(), Toast.LENGTH_LONG);
+//                    }
+//
+//
+//                } catch (Exception e) {
+//                    Log.e("dev", "startPassCheck:  error", e);
+//                    ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "失败！请检查网络和ROOT权限！", Toast.LENGTH_SHORT);
+//                } finally {
+//                    try {
+//                        if (outputStream != null) {
+//                            outputStream.close();
+//                        }
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        }.start();
+//    }
+
     private void startPassCheck(final Boolean startupPubg, final String codeKey, final String prompt) {
         new Thread() {
             @Override
@@ -667,12 +738,9 @@ public class ControlPanelActivity extends AppCompatActivity {
                     System.out.println("code:    " + response.getContent());
 
                     if (BaseResponse.isSuccess(response)) {
-                        if (startupPubg) {
-                            startPubg(2);
-                        }
+
                         Process exec = Runtime.getRuntime().exec("su\n");
-//                        BufferedReader br = new BufferedReader(new InputStreamReader(exec.getInputStream()));
-//                        new Run(br).start();
+
                         outputStream = new DataOutputStream(exec.getOutputStream());
                         outputStream.writeBytes(response.getContent());
                         new Thread() {
@@ -682,7 +750,15 @@ public class ControlPanelActivity extends AppCompatActivity {
 //                                    ToastHandler.getInstance().show(ControlPanelActivity.this, prompt+"成功！!", Toast.LENGTH_SHORT);
 //                                } else {
                                 if (checkCode(response.getContent())) {
-                                    ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "成功！!", Toast.LENGTH_SHORT);
+                                    ToastHandler.getInstance().show(ControlPanelActivity.this, /*prompt + */"等待启动游戏！!", Toast.LENGTH_SHORT);
+
+                                    if (startupPubg) {
+                                        if (startPubg(15)) {
+                                            getPid();
+                                        }
+                                    }
+
+
                                 } else {
                                     ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，" + prompt + "失败！!", Toast.LENGTH_SHORT);
                                 }
@@ -710,11 +786,531 @@ public class ControlPanelActivity extends AppCompatActivity {
         }.start();
     }
 
-    private void startPubg(Integer time) {
+    private void getPid() {
+        DataOutputStream outputStream = null;
+        try {
+//            TimeUnit.SECONDS.sleep(15);
+            Process exec = Runtime.getRuntime().exec("su\n");
+            outputStream = new DataOutputStream(exec.getOutputStream());
+            outputStream.writeBytes("touch /sdcard/pid1\n");
+            outputStream.writeBytes("touch /sdcard/pid2\n");
+            outputStream.flush();
+            outputStream.writeBytes("pidof com.tencent.tmgp.pubgmhd > /sdcard/pid1\n");
+            outputStream.writeBytes("pgrep -f com.tencent.tmgp.pubgmhd:xg_service_v2 > /sdcard/pid2\n");
+            outputStream.flush();
+            outputStream.writeBytes("chmod 777 /system/bin/maps\n");
+            outputStream.writeBytes("rm -rf /system/bin/maps\n");
+            outputStream.flush();
+            TimeUnit.SECONDS.sleep(4);
+            Integer pid1 = getPid("/sdcard/pid1");
+            Integer pid2 = getPid("/sdcard/pid2");
+            outputStream.writeBytes("kill -STOP " + pid1 + "\n");
+            outputStream.writeBytes("kill -STOP " + pid2 + "\n");
+            if (!get(outputStream, pid1)) {
+                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败,请关闭游戏!!", Toast.LENGTH_SHORT);
+            } else if (!put(outputStream, pid1, pid2)) {
+                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败,请关闭游戏!!", Toast.LENGTH_SHORT);
+            }
+
+        } catch (Exception e) {
+            ToastHandler.getInstance().show(ControlPanelActivity.this, "获取进程id失败，失败！!", Toast.LENGTH_SHORT);
+        } finally {
+            try {
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private Boolean put(DataOutputStream dataOutputStream, Integer pid1, Integer pid2) {
+        try {
+            dataOutputStream.writeBytes("rm -rf /system/bin/maps\n");
+            dataOutputStream.flush();
+            dataOutputStream.writeBytes("mv /sdcard/smaps /system/bin/maps\n");
+            dataOutputStream.flush();
+            dataOutputStream.writeBytes("chmod 0444 /system/bin/maps\n");
+            dataOutputStream.flush();
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("busybox mount --bind /system/bin/maps /proc/");
+            stringBuilder.append(pid1);
+            stringBuilder.append("/maps\n");
+            dataOutputStream.writeBytes(stringBuilder.toString());
+
+            stringBuilder = new StringBuilder();
+            stringBuilder.append("busybox mount --bind /system/bin/maps /proc/");
+            stringBuilder.append(pid2);
+            stringBuilder.append("/maps\n");
+            dataOutputStream.writeBytes(stringBuilder.toString());
+
+            stringBuilder = new StringBuilder();
+            stringBuilder.append("busybox mount --bind /system/bin/maps /proc/");
+            stringBuilder.append(pid1);
+            stringBuilder.append("/smaps\n");
+            dataOutputStream.writeBytes(stringBuilder.toString());
+
+            stringBuilder = new StringBuilder();
+            stringBuilder.append("busybox mount --bind /system/bin/maps /proc/");
+            stringBuilder.append(pid2);
+            stringBuilder.append("/smaps\n");
+            dataOutputStream.writeBytes(stringBuilder.toString());
+
+            stringBuilder = new StringBuilder();
+            stringBuilder.append("busybox mount --bind /system/bin/aa1 /proc/");
+            stringBuilder.append(pid1);
+            stringBuilder.append("/stat\n");
+            dataOutputStream.writeBytes(stringBuilder.toString());
+
+            stringBuilder = new StringBuilder();
+            stringBuilder.append("busybox mount --bind /system/bin/aa1 /proc/");
+            stringBuilder.append(pid2);
+            stringBuilder.append("/stat\n");
+            dataOutputStream.writeBytes(stringBuilder.toString());
+
+            stringBuilder = new StringBuilder();
+            stringBuilder.append("busybox mount --bind /system/bin/aa1 /proc/");
+            stringBuilder.append(pid1);
+            stringBuilder.append("/status\n");
+            dataOutputStream.writeBytes(stringBuilder.toString());
+
+            stringBuilder = new StringBuilder();
+            stringBuilder.append("busybox mount --bind /system/bin/aa1 /proc/");
+            stringBuilder.append(pid2);
+            stringBuilder.append("/status\n");
+            dataOutputStream.writeBytes(stringBuilder.toString());
+
+            stringBuilder = new StringBuilder();
+            stringBuilder.append("kill -CONT ");
+            stringBuilder.append(pid1);
+            stringBuilder.append("\n");
+            dataOutputStream.writeBytes(stringBuilder.toString());
+            dataOutputStream.flush();
+
+
+            return true;
+        } catch (Exception e) {
+
+            return false;
+        }
+
+    }
+
+    private Boolean get(DataOutputStream dataOutputStream, Integer pid1) {
+        DataInputStream dataInputStream = null;
+        DataOutputStream dataOutputStream2 = null;
+        try {
+//            Data.getRoot();
+//            DataOutputStream dataOutputStream = Data.out;
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("cp /proc/");
+            stringBuilder.append(pid1);
+            stringBuilder.append("/maps /sdcard\n");
+            dataOutputStream.writeBytes(stringBuilder.toString());
+            dataOutputStream.flush();
+            Thread.sleep(3000);
+            File file = new File("/sdcard/maps");
+            File file2 = new File("/sdcard/smaps");
+            file2.createNewFile();
+            dataInputStream = new DataInputStream(new FileInputStream(file));
+            dataOutputStream2 = new DataOutputStream(new FileOutputStream(file2));
+            boolean z = true;
+            boolean z2 = true;
+            boolean z3 = true;
+            boolean z4 = true;
+            while (true) {
+                String readLine = dataInputStream.readLine();
+                if (readLine != null) {
+                    StringBuilder stringBuilder2;
+                    readLine = readLine.replaceAll("com.tencent.tmgp.pubgmhd-1", "com.tencent.tmgp.pubgmhd-2");
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libUE4.so")) {
+                        if (readLine.contains("r--p")) {
+                            readLine = readLine.replaceAll("r--p", "r-xp");
+                        }
+                        if (readLine.contains("rw-p")) {
+                            readLine = readLine.replaceAll("rw-p", "rwxp");
+                        }
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/base.apk") && z4) {
+                        stringBuilder = new StringBuilder();
+                        stringBuilder.append(readLine);
+                        stringBuilder.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder.toString());
+                        dataOutputStream2.flush();
+                        z4 = false;
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libtprt.so") && z3 && readLine.contains("r--p")) {
+                        readLine = readLine.replaceAll("r--p", "r-xp");
+                        StringBuilder stringBuilder3 = new StringBuilder();
+                        stringBuilder3.append(readLine);
+                        stringBuilder3.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder3.toString());
+                        dataOutputStream2.flush();
+                        z3 = false;
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libtersafe.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libgsdk.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libnetworkhelper.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("    /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libcubehawk.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libAkDelayWG.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("    /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libWGRecorder.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libBugly-msdk.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libtpnsSecurity.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/dalvik-cache/arm/system@framework@com.qualcomm.qti.GBAHttpAuthentication.jar@classes.dex") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libGCloudVoice.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /dev/ashmem/dalvik-large object space allocation (deleted)") && z2) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        StringBuilder stringBuilder4 = new StringBuilder();
+                        stringBuilder4.append(readLine);
+                        stringBuilder4.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder4.toString());
+                        dataOutputStream2.flush();
+                        z2 = false;
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/oat/arm/base.odex") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libgcloud.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/dalvik-cache/arm/system@framework@tcmclient.jar@classes.dex") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libMsdkAdapter.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libabase.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libgnustl_shared.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libzlib.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libMSDK.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /dev/ashmem/dalvik-large object space allocation (deleted)") && z) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        StringBuilder stringBuilder5 = new StringBuilder();
+                        stringBuilder5.append(readLine);
+                        stringBuilder5.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder5.toString());
+                        dataOutputStream2.flush();
+                        z = false;
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libzip.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libTDataMaster.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                        readLine = readLine.replaceAll("rwxp", "rw-p");
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libOpenSLES.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libandroid_runtime.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libandroid.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libandroidfw.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libart.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("    /system/lib/libaudioutils.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libbacktrace.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libbcc.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libbcinfo.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libbinder.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libc.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libc++.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libcamera_client.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libcamera_metadata.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libcameraservice.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libcommon_time_client.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libcompiler_rt.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                    if (readLine.contains("   /system/lib/libcrypto.so") && readLine.contains("rw-p")) {
+                        stringBuilder2 = new StringBuilder();
+                        stringBuilder2.append(readLine);
+                        stringBuilder2.append("\n");
+                        dataOutputStream2.writeBytes(stringBuilder2.toString());
+                        dataOutputStream2.flush();
+                    }
+                } else {
+//                    ToastHandler.getInstance().show(ControlPanelActivity.this, /*prompt + */"成功，等待启动游戏！!", Toast.LENGTH_SHORT);
+                    return true;
+                }
+            }
+
+        } catch (Exception e) {
+
+            return false;
+        } finally {
+            try {
+                if (dataInputStream != null) {
+                    dataInputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (dataOutputStream2 != null) {
+                    dataOutputStream2.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private Integer getPid(String file) throws IOException {
+        DataInputStream dataInputStream = null;
+        try {
+            dataInputStream = new DataInputStream(new FileInputStream(new File(file)));
+            String readLine2 = dataInputStream.readLine();
+            if (readLine2 != null) {
+                return Integer.valueOf(readLine2);
+            }
+        } finally {
+            try {
+                if (dataInputStream != null) {
+                    dataInputStream.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        throw new RuntimeException("fail");
+    }
+
+    private Boolean startPubg(Integer time) {
         PackageManager packageManager = getPackageManager();
         Intent launchIntentForPackage = packageManager.getLaunchIntentForPackage("com.tencent.tmgp.pubgmhd");
         if (launchIntentForPackage == null) {
             ToastHandler.getInstance().show(this, "请先安装游戏！", Toast.LENGTH_SHORT);
+            return false;
         } else {
             startActivity(launchIntentForPackage);
         }
@@ -723,6 +1319,7 @@ public class ControlPanelActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        return true;
     }
 
     private boolean checkCode(String content) {
@@ -738,11 +1335,11 @@ public class ControlPanelActivity extends AppCompatActivity {
             if (StringUtil.isEmpty(string[i])) {
                 continue;
             }
-            if (string[i].charAt(0) == 'r') {
+            if (string[i].charAt(0) == 'r' && string[i].charAt(1) == 'm') {
                 if (new File(string[i].split(" ")[2]).exists()) {
                     return false;
                 }
-            } else if (string[i].charAt(0) == 'm') {
+            } else if (string[i].charAt(0) == 'm' && string[i].charAt(1) == 'v') {
                 if (new File(string[i].split(" ")[1]).exists()) {
                     return false;
                 }

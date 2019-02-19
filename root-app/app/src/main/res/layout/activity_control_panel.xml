@@ -52,17 +52,17 @@
                 app:layout_columnSpan="2"
                 app:layout_gravity="fill" />
 
-            <Button
-                android:id="@+id/pullHosts"
-                android:layout_height="wrap_content"
-                android:text="加载数据拦截"
-                app:layout_gravity="fill" />
+            <!--<Button-->
+                <!--android:id="@+id/pullHosts"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="加载数据拦截"-->
+                <!--app:layout_gravity="fill" />-->
 
-            <Button
-                android:id="@+id/recoverHosts"
-                android:layout_height="wrap_content"
-                android:text="关闭数据拦截"
-                app:layout_gravity="fill" />
+            <!--<Button-->
+                <!--android:id="@+id/recoverHosts"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="关闭数据拦截"-->
+                <!--app:layout_gravity="fill" />-->
 
             <Button
                 android:id="@+id/buyVip"
@@ -94,17 +94,17 @@
                 app:layout_columnSpan="1"
                 app:layout_gravity="fill" />
 
-            <Button
-                android:id="@+id/startPlugin"
-                android:layout_height="wrap_content"
-                android:text="启动刺激战场"
-                app:layout_gravity="fill" />
+            <!--<Button-->
+                <!--android:id="@+id/startPlugin"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="启动刺激战场"-->
+                <!--app:layout_gravity="fill" />-->
 
-            <Button
-                android:id="@+id/repairPubg"
-                android:layout_height="wrap_content"
-                android:text="修复刺激战场"
-                app:layout_gravity="fill" />
+            <!--<Button-->
+                <!--android:id="@+id/repairPubg"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="修复刺激战场"-->
+                <!--app:layout_gravity="fill" />-->
 
             <Button
                 android:id="@+id/startPassCheck2"

@@ -2,7 +2,7 @@ package com.zylear.root.rootapp.constants;
 
 public class AppConstant {
 
-    public static final String VERSION = "3.0.4";
+    public static final String VERSION = "3.0.5";
 
     //    public static final String HOST = "http://172.22.9.68";
     //    public static final String HOST = "http://111.231.66.159"; //fu
