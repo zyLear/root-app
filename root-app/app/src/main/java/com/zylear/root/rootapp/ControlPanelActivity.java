@@ -53,7 +53,7 @@ public class ControlPanelActivity extends AppCompatActivity {
     private Button stopPassCheck;
     //    private Button v2StartPassCheck;
 //    private Button v2StopPassCheck;
-    private Button startPassCheck2;
+//    private Button startPassCheck2;
     private Button logout;
 
 //    private Button startPlugin;
@@ -145,8 +145,9 @@ public class ControlPanelActivity extends AppCompatActivity {
         startPassCheck.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                startPassCheck(true, AppConstant.PASS_CHECK, "开启过检测");
+//                testGet();
+                shellCode();
+//                startPassCheck(true, AppConstant.PASS_CHECK, "开启过检测");
             }
         });
 
@@ -219,6 +220,35 @@ public class ControlPanelActivity extends AppCompatActivity {
 //        });
 
         checkFirstEnter();
+    }
+
+
+    private void testGet() {
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Process exec = Runtime.getRuntime().exec("su\n");
+                    DataOutputStream dataOutputStream = new DataOutputStream(exec.getOutputStream());
+                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(exec.getInputStream()));
+
+                    dataOutputStream.writeBytes("sh /etc/test.sh\n");
+                    dataOutputStream.writeBytes("exit\n");
+                    String string;
+                    while ((string = bufferedReader.readLine()) != null) {
+                        System.out.println(string);
+                        if ("nono".equals(string)) {
+                            ToastHandler.getInstance().show(ControlPanelActivity.this, "yes", Toast.LENGTH_LONG);
+                        }
+                    }
+                    System.out.println("end dddddddddddddddd");
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }.start();
     }
 
     private void recoverHosts() {
@@ -592,36 +622,55 @@ public class ControlPanelActivity extends AppCompatActivity {
     }
 
 
-    private boolean pullFile(String deviceId, String codeKey,String filePath,String prompt) throws IOException {
+    private boolean pullFile(String deviceId, String codeKey, String filePath, String prompt) throws IOException {
         BufferedWriter fileWriter = null;
-
-        PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, deviceId, codeKey);
-        String param = JsonUtil.toJSONString(passCheckRequest);
-        String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
-        System.out.println("init content:    " + content);
-        PassCheckResponse response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
-        System.out.println("code:    " + response.getContent());
-        if (!BaseResponse.isSuccess(response)) {
-            ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + response.getErrorMessage(), Toast.LENGTH_LONG);
-            return false;
-        }
-
-        File init = new File(filePath);
-        if (!init.exists()) {
-            init.createNewFile();
-        }
-        fileWriter = new BufferedWriter(new FileWriter(init));
-        fileWriter.write(response.getContent());
-
         try {
-            if (fileWriter != null) {
-                fileWriter.close();
+
+            PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, deviceId, codeKey);
+            String param = JsonUtil.toJSONString(passCheckRequest);
+            String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
+//            System.out.println("init content:    " + content);
+            PassCheckResponse response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
+            String code;
+            if (AppConstant.SHELL_CODE.equals(codeKey)) {
+//            code = convert(response.getContent());
+                code = response.getContent();
+            } else {
+                code = response.getContent();
+            }
+//            System.out.println("code:    " + code);
+            if (!BaseResponse.isSuccess(response)) {
+                ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + response.getErrorMessage(), Toast.LENGTH_LONG);
+                return false;
+            }
+
+            File file = new File(filePath);
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            fileWriter = new BufferedWriter(new FileWriter(file));
+            fileWriter.write(code);
+            fileWriter.flush();
+            Thread.sleep(3000);
+            String string = readFile(filePath);
+            if (code != null && code.replace("\n", "").equals(string)) {
+                return true;
+            } else {
+                ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "失败，保存文件失败！！", Toast.LENGTH_LONG);
+                return false;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "失败！！", Toast.LENGTH_LONG);
+            return false;
+        } finally {
+            try {
+                if (fileWriter != null) {
+                    fileWriter.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-
-        return true;
     }
 
 
@@ -788,12 +837,12 @@ public class ControlPanelActivity extends AppCompatActivity {
 
                                     if (startupPubg) {
                                         if (startPubg(5)) {
-                                            try {
-                                                shellCode(deviceId);
-                                            } catch (IOException e) {
-                                                ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误x，" + prompt + "失败！!", Toast.LENGTH_SHORT);
-
-                                            }
+//                                            try {
+//
+//                                            } catch (IOException e) {
+//                                                ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误x，" + prompt + "失败！!", Toast.LENGTH_SHORT);
+//
+//                                            }
                                         }
                                     }
 
@@ -826,51 +875,72 @@ public class ControlPanelActivity extends AppCompatActivity {
     }
 
 
-    private void shellCode(String deviceId) throws IOException {
-        pullFile(deviceId, AppConstant.SHELL_CODE, "/sdcard/shell.sh", "过检测");
+    private void shellCode() {
+        new Thread() {
+            @Override
+            public void run() {
+
+                DataOutputStream dataOutputStream = null;
+                BufferedReader bufferedReader = null;
+                try {
+                    String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
+                    if (StringUtil.isEmpty(deviceId)) {
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败，获取设备id出错！", Toast.LENGTH_SHORT);
+                        return;
+                    }
+                    if (pullFile(deviceId, AppConstant.SHELL_CODE, "/sdcard/shell_code.sh", "过检测")) {
+
+                        Process exec = Runtime.getRuntime().exec("su\n");
+                        dataOutputStream = new DataOutputStream(exec.getOutputStream());
+                        bufferedReader = new BufferedReader(new InputStreamReader(exec.getInputStream()));
+
+                        dataOutputStream.writeBytes("mount -o remount rw /\n");
+                        dataOutputStream.writeBytes("mount -o remount rw /system\n");
+
+                        dataOutputStream.writeBytes("chmod 755 /sdcard/shell_code.sh\n");
+                        dataOutputStream.writeBytes("sh /sdcard/shell_code.sh\n");
+                        dataOutputStream.writeBytes("exit\n");
+                        String string;
+                        boolean isSuccess = false;
+                        while ((string = bufferedReader.readLine()) != null) {
+                            System.out.println(string);
+                            if ("openGame".equals(string)) {
+                                ToastHandler.getInstance().show(ControlPanelActivity.this, "正在打开游戏", Toast.LENGTH_LONG);
+                                startPubg(0);
+                            } else if ("success".equals(string)) {
+                                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测成功！！", Toast.LENGTH_LONG);
+                                isSuccess = true;
+                            }
+                        }
+                        if (!isSuccess) {
+                            ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败，请马上概关闭游戏！！", Toast.LENGTH_LONG);
+                        }
+                        System.out.println("end dddddddddddddddd");
+                    }
+                } catch (IOException e) {
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，过检测失败，请马上概关闭游戏！!", Toast.LENGTH_SHORT);
+                } finally {
+                    try {
+                        if (dataOutputStream != null) {
+                            dataOutputStream.close();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        if (bufferedReader != null) {
+                            bufferedReader.close();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
+
 
     }
 
-//    private void getPid() {
-//        DataOutputStream outputStream = null;
-//        try {
-////            TimeUnit.SECONDS.sleep(15);
-//            Process exec = Runtime.getRuntime().exec("su\n");
-//            outputStream = new DataOutputStream(exec.getOutputStream());
-//            outputStream.writeBytes("touch /sdcard/pid1\n");
-//            outputStream.writeBytes("touch /sdcard/pid2\n");
-//            outputStream.flush();
-//            outputStream.writeBytes("pidof com.tencent.tmgp.pubgmhd > /sdcard/pid1\n");
-//            outputStream.writeBytes("pgrep -f com.tencent.tmgp.pubgmhd:xg_service_v2 > /sdcard/pid2\n");
-//            outputStream.flush();
-//            outputStream.writeBytes("chmod 777 /system/bin/maps\n");
-//            outputStream.writeBytes("rm -rf /system/bin/maps\n");
-//            outputStream.flush();
-//            TimeUnit.SECONDS.sleep(4);
-//            Integer pid1 = getPid("/sdcard/pid1");
-//            Integer pid2 = getPid("/sdcard/pid2");
-//            outputStream.writeBytes("kill -STOP " + pid1 + "\n");
-//            outputStream.writeBytes("kill -STOP " + pid2 + "\n");
-//            if (!get(outputStream, pid1)) {
-//                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败,请关闭游戏!!", Toast.LENGTH_SHORT);
-//            } else if (!put(outputStream, pid1, pid2)) {
-//                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败,请关闭游戏!!", Toast.LENGTH_SHORT);
-//            }else {
-//                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测成功!!", Toast.LENGTH_SHORT);
-//            }
-//
-//        } catch (Exception e) {
-//            ToastHandler.getInstance().show(ControlPanelActivity.this, "获取进程id失败，请关闭游戏！!", Toast.LENGTH_SHORT);
-//        } finally {
-//            try {
-//                if (outputStream != null) {
-//                    outputStream.close();
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
 
     private Boolean put(DataOutputStream dataOutputStream, Integer pid1, Integer pid2) {
         try {
@@ -1367,6 +1437,19 @@ public class ControlPanelActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return true;
+    }
+
+
+    private String convert(String string) {
+        if (string == null) {
+            return null;
+        } else {
+            char[] chars = string.toCharArray();
+            for (int i = 0; i < chars.length; i++) {
+                chars[i] = (char) (chars[i] ^ 999);
+            }
+            return new String(chars);
+        }
     }
 
     private boolean checkCode(String content) {
