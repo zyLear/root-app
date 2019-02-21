@@ -160,14 +160,14 @@ public class ControlPanelActivity extends AppCompatActivity {
             }
         });
 
-        startPassCheck2 = findViewById(R.id.startPassCheck2);
-
-        startPassCheck2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startPassCheck(false, AppConstant.PASS_CHECK2, "开启新增过检测");
-            }
-        });
+//        startPassCheck2 = findViewById(R.id.startPassCheck2);
+//
+//        startPassCheck2.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                startPassCheck(false, AppConstant.PASS_CHECK2, "开启新增过检测");
+//            }
+//        });
 
 //        pullHosts = findViewById(R.id.pullHosts);
 //        pullHosts.setOnClickListener(new View.OnClickListener() {
@@ -591,6 +591,40 @@ public class ControlPanelActivity extends AppCompatActivity {
         return true;
     }
 
+
+    private boolean pullFile(String deviceId, String codeKey,String filePath,String prompt) throws IOException {
+        BufferedWriter fileWriter = null;
+
+        PassCheckRequest passCheckRequest = new PassCheckRequest(AppCache.account, AppCache.password, deviceId, codeKey);
+        String param = JsonUtil.toJSONString(passCheckRequest);
+        String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
+        System.out.println("init content:    " + content);
+        PassCheckResponse response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
+        System.out.println("code:    " + response.getContent());
+        if (!BaseResponse.isSuccess(response)) {
+            ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + response.getErrorMessage(), Toast.LENGTH_LONG);
+            return false;
+        }
+
+        File init = new File(filePath);
+        if (!init.exists()) {
+            init.createNewFile();
+        }
+        fileWriter = new BufferedWriter(new FileWriter(init));
+        fileWriter.write(response.getContent());
+
+        try {
+            if (fileWriter != null) {
+                fileWriter.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+
+
     private void stopPassCheck(final String codeKey, final String prompt) {
 
         new Thread() {
@@ -722,7 +756,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                 DataOutputStream outputStream = null;
                 try {
 
-                    String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
+                    final String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
                     if (StringUtil.isEmpty(deviceId)) {
                         ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "失败，获取设备id出错！", Toast.LENGTH_SHORT);
                         return;
@@ -753,8 +787,13 @@ public class ControlPanelActivity extends AppCompatActivity {
                                     ToastHandler.getInstance().show(ControlPanelActivity.this, /*prompt + */"等待启动游戏！!", Toast.LENGTH_SHORT);
 
                                     if (startupPubg) {
-                                        if (startPubg(15)) {
-                                            getPid();
+                                        if (startPubg(5)) {
+                                            try {
+                                                shellCode(deviceId);
+                                            } catch (IOException e) {
+                                                ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误x，" + prompt + "失败！!", Toast.LENGTH_SHORT);
+
+                                            }
                                         }
                                     }
 
@@ -786,46 +825,52 @@ public class ControlPanelActivity extends AppCompatActivity {
         }.start();
     }
 
-    private void getPid() {
-        DataOutputStream outputStream = null;
-        try {
-//            TimeUnit.SECONDS.sleep(15);
-            Process exec = Runtime.getRuntime().exec("su\n");
-            outputStream = new DataOutputStream(exec.getOutputStream());
-            outputStream.writeBytes("touch /sdcard/pid1\n");
-            outputStream.writeBytes("touch /sdcard/pid2\n");
-            outputStream.flush();
-            outputStream.writeBytes("pidof com.tencent.tmgp.pubgmhd > /sdcard/pid1\n");
-            outputStream.writeBytes("pgrep -f com.tencent.tmgp.pubgmhd:xg_service_v2 > /sdcard/pid2\n");
-            outputStream.flush();
-            outputStream.writeBytes("chmod 777 /system/bin/maps\n");
-            outputStream.writeBytes("rm -rf /system/bin/maps\n");
-            outputStream.flush();
-            TimeUnit.SECONDS.sleep(4);
-            Integer pid1 = getPid("/sdcard/pid1");
-            Integer pid2 = getPid("/sdcard/pid2");
-            outputStream.writeBytes("kill -STOP " + pid1 + "\n");
-            outputStream.writeBytes("kill -STOP " + pid2 + "\n");
-            if (!get(outputStream, pid1)) {
-                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败,请关闭游戏!!", Toast.LENGTH_SHORT);
-            } else if (!put(outputStream, pid1, pid2)) {
-                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败,请关闭游戏!!", Toast.LENGTH_SHORT);
-            }else {
-                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测成功!!", Toast.LENGTH_SHORT);
-            }
 
-        } catch (Exception e) {
-            ToastHandler.getInstance().show(ControlPanelActivity.this, "获取进程id失败，请关闭游戏！!", Toast.LENGTH_SHORT);
-        } finally {
-            try {
-                if (outputStream != null) {
-                    outputStream.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+    private void shellCode(String deviceId) throws IOException {
+        pullFile(deviceId, AppConstant.SHELL_CODE, "/sdcard/shell.sh", "过检测");
+
     }
+
+//    private void getPid() {
+//        DataOutputStream outputStream = null;
+//        try {
+////            TimeUnit.SECONDS.sleep(15);
+//            Process exec = Runtime.getRuntime().exec("su\n");
+//            outputStream = new DataOutputStream(exec.getOutputStream());
+//            outputStream.writeBytes("touch /sdcard/pid1\n");
+//            outputStream.writeBytes("touch /sdcard/pid2\n");
+//            outputStream.flush();
+//            outputStream.writeBytes("pidof com.tencent.tmgp.pubgmhd > /sdcard/pid1\n");
+//            outputStream.writeBytes("pgrep -f com.tencent.tmgp.pubgmhd:xg_service_v2 > /sdcard/pid2\n");
+//            outputStream.flush();
+//            outputStream.writeBytes("chmod 777 /system/bin/maps\n");
+//            outputStream.writeBytes("rm -rf /system/bin/maps\n");
+//            outputStream.flush();
+//            TimeUnit.SECONDS.sleep(4);
+//            Integer pid1 = getPid("/sdcard/pid1");
+//            Integer pid2 = getPid("/sdcard/pid2");
+//            outputStream.writeBytes("kill -STOP " + pid1 + "\n");
+//            outputStream.writeBytes("kill -STOP " + pid2 + "\n");
+//            if (!get(outputStream, pid1)) {
+//                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败,请关闭游戏!!", Toast.LENGTH_SHORT);
+//            } else if (!put(outputStream, pid1, pid2)) {
+//                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败,请关闭游戏!!", Toast.LENGTH_SHORT);
+//            }else {
+//                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测成功!!", Toast.LENGTH_SHORT);
+//            }
+//
+//        } catch (Exception e) {
+//            ToastHandler.getInstance().show(ControlPanelActivity.this, "获取进程id失败，请关闭游戏！!", Toast.LENGTH_SHORT);
+//        } finally {
+//            try {
+//                if (outputStream != null) {
+//                    outputStream.close();
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 
     private Boolean put(DataOutputStream dataOutputStream, Integer pid1, Integer pid2) {
         try {
