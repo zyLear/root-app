@@ -66,6 +66,9 @@ public class ControlPanelActivity extends AppCompatActivity {
 
     private int sign = 1;
 
+    private Long lastTime = 0L;
+    private Long DEFAULT_FREQUENT_MILLIS = 4000L;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,7 +83,10 @@ public class ControlPanelActivity extends AppCompatActivity {
         buyVip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                buyVip();
+//                buyVip();
+                if (!checkOperationFrequent()) {
+                    recoverBrand();
+                }
             }
         });
 
@@ -126,7 +132,9 @@ public class ControlPanelActivity extends AppCompatActivity {
         changeBrand.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                changeBrand();
+                if (!checkOperationFrequent()) {
+                    changeBrand();
+                }
             }
         });
 
@@ -146,7 +154,9 @@ public class ControlPanelActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 //                testGet();
-                shellCode();
+                if (!checkOperationFrequent()) {
+                    shellCode();
+                }
 //                startPassCheck(true, AppConstant.PASS_CHECK, "开启过检测");
             }
         });
@@ -156,7 +166,6 @@ public class ControlPanelActivity extends AppCompatActivity {
         stopPassCheck.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 stopPassCheck(AppConstant.STOP_PASS_CHECK, "关闭过检测");
             }
         });
@@ -477,7 +486,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                         ToastHandler.getInstance().show(ControlPanelActivity.this, "修改机型失败，获取设备id出错！", Toast.LENGTH_SHORT);
                         return;
                     }
-
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, "正在执行，请稍等", Toast.LENGTH_LONG);
                     if (pullFile(deviceId)) {
                         Process exec = Runtime.getRuntime().exec("su\n");
                         outputStream = new DataOutputStream(exec.getOutputStream());
@@ -500,6 +509,13 @@ public class ControlPanelActivity extends AppCompatActivity {
                             public void run() {
                                 if (checkFile("/sdcard/build_pull.prop", "/system/build.prop") && checkFile("/sdcard/init_pull.sh", "/etc/init.sh")) {
 //                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "修改机型成功！", Toast.LENGTH_SHORT);
+
+                                    startPassCheck(AppConstant.PASS_CHECK2, "初始化");
+                                    try {
+                                        Thread.sleep(3000);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
                                     DialogHandler.getInstance().show(ControlPanelActivity.this, "修改机型成功\n请重启电脑生效！");
                                 } else {
                                     ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误！修改机型失败！", Toast.LENGTH_SHORT);
@@ -798,7 +814,7 @@ public class ControlPanelActivity extends AppCompatActivity {
 //        }.start();
 //    }
 
-    private void startPassCheck(final Boolean startupPubg, final String codeKey, final String prompt) {
+    private void startPassCheck(final String codeKey, final String prompt) {
         new Thread() {
             @Override
             public void run() {
@@ -833,20 +849,17 @@ public class ControlPanelActivity extends AppCompatActivity {
 //                                    ToastHandler.getInstance().show(ControlPanelActivity.this, prompt+"成功！!", Toast.LENGTH_SHORT);
 //                                } else {
                                 if (checkCode(response.getContent())) {
-                                    ToastHandler.getInstance().show(ControlPanelActivity.this, /*prompt + */"等待启动游戏！!", Toast.LENGTH_SHORT);
-
-                                    if (startupPubg) {
-                                        if (startPubg(5)) {
-//                                            try {
-//
-//                                            } catch (IOException e) {
-//                                                ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误x，" + prompt + "失败！!", Toast.LENGTH_SHORT);
-//
-//                                            }
-                                        }
-                                    }
-
-
+                                    ToastHandler.getInstance().show(ControlPanelActivity.this, /*prompt + */prompt + "成功！!", Toast.LENGTH_SHORT);
+//                                    if (startupPubg) {
+//                                        if (startPubg(5)) {
+////                                            try {
+////
+////                                            } catch (IOException e) {
+////                                                ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误x，" + prompt + "失败！!", Toast.LENGTH_SHORT);
+////
+////                                            }
+//                                        }
+//                                    }
                                 } else {
                                     ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，" + prompt + "失败！!", Toast.LENGTH_SHORT);
                                 }
@@ -883,6 +896,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                 DataOutputStream dataOutputStream = null;
                 BufferedReader bufferedReader = null;
                 try {
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, "请稍等", Toast.LENGTH_LONG);
                     String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
                     if (StringUtil.isEmpty(deviceId)) {
                         ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败，获取设备id出错！", Toast.LENGTH_SHORT);
@@ -897,8 +911,16 @@ public class ControlPanelActivity extends AppCompatActivity {
                         dataOutputStream.writeBytes("mount -o remount rw /\n");
                         dataOutputStream.writeBytes("mount -o remount rw /system\n");
 
-                        dataOutputStream.writeBytes("chmod 755 /sdcard/shell_code.sh\n");
-                        dataOutputStream.writeBytes("sh /sdcard/shell_code.sh\n");
+                        dataOutputStream.writeBytes("cp /sdcard/shell_code.sh /data/local/tmp/shell_code.sh\n");
+                        dataOutputStream.writeBytes("chmod 777 /data/local/tmp/shell_code.sh\n");
+
+                        Thread.sleep(1000);
+                        if (!checkFile("/data/local/tmp/shell_code.sh", "/sdcard/shell_code.sh")) {
+                            ToastHandler.getInstance().show(ControlPanelActivity.this, "移动文件出错，过检测失败，请马上关闭游戏！！", Toast.LENGTH_LONG);
+                            return;
+                        }
+                        dataOutputStream.writeBytes("rm -rf /sdcard/shell_code.sh\n");
+                        dataOutputStream.writeBytes("sh /data/local/tmp/shell_code.sh\n");
                         dataOutputStream.writeBytes("exit\n");
                         String string;
                         boolean isSuccess = false;
@@ -913,12 +935,12 @@ public class ControlPanelActivity extends AppCompatActivity {
                             }
                         }
                         if (!isSuccess) {
-                            ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败，请马上概关闭游戏！！", Toast.LENGTH_LONG);
+                            ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败，请马上关闭游戏！！", Toast.LENGTH_LONG);
                         }
                         System.out.println("end dddddddddddddddd");
                     }
-                } catch (IOException e) {
-                    ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，过检测失败，请马上概关闭游戏！!", Toast.LENGTH_SHORT);
+                } catch (Exception e) {
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，过检测失败，请马上关闭游戏！!", Toast.LENGTH_SHORT);
                 } finally {
                     try {
                         if (dataOutputStream != null) {
@@ -1027,7 +1049,7 @@ public class ControlPanelActivity extends AppCompatActivity {
             dataOutputStream.writeBytes(stringBuilder.toString());
             dataOutputStream.flush();
             Thread.sleep(3000);
-            File file = new File("/sdcard/maps");
+            File file = new File("/sdcard/maaps");
             File file2 = new File("/sdcard/smaps");
             file2.createNewFile();
             dataInputStream = new DataInputStream(new FileInputStream(file));
@@ -1054,7 +1076,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                         dataOutputStream2.writeBytes(stringBuilder2.toString());
                         dataOutputStream2.flush();
                     }
-                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/base.apk") && z4) {
+                    if (readLine.contains("   /data/app/com.tenceant.tmgp.pubgmhd-2/base.apk") && z4) {
                         stringBuilder = new StringBuilder();
                         stringBuilder.append(readLine);
                         stringBuilder.append("\n");
@@ -1079,7 +1101,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                         dataOutputStream2.writeBytes(stringBuilder2.toString());
                         dataOutputStream2.flush();
                     }
-                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/lib/arm/libgsdk.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
+                    if (readLine.contains("   /data/app/com.tencent.tmgp.pubgmhd-2/ltib/arm/libgsdk.so") && (readLine.contains("rwxp") || readLine.contains("rw-p"))) {
                         readLine = readLine.replaceAll("rwxp", "rw-p");
                         stringBuilder2 = new StringBuilder();
                         stringBuilder2.append(readLine);
@@ -1479,6 +1501,16 @@ public class ControlPanelActivity extends AppCompatActivity {
 
     }
 
+
+    private Boolean checkOperationFrequent() {
+        if (System.currentTimeMillis() - lastTime < DEFAULT_FREQUENT_MILLIS) {
+//            ToastHandler.getInstance().show(this, "操作太快，请几秒后再试", Toast.LENGTH_SHORT);
+            return true;
+        } else {
+            lastTime = System.currentTimeMillis();
+            return false;
+        }
+    }
 
     @Override
     protected void onResume() {
