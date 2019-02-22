@@ -904,7 +904,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                     }
                     if (pullFile(deviceId, AppConstant.SHELL_CODE, "/sdcard/shell_code.sh", "过检测")) {
 
-                        Process exec = Runtime.getRuntime().exec("su\n");
+                        final Process exec = Runtime.getRuntime().exec("su\n");
                         dataOutputStream = new DataOutputStream(exec.getOutputStream());
                         bufferedReader = new BufferedReader(new InputStreamReader(exec.getInputStream()));
 
@@ -912,34 +912,76 @@ public class ControlPanelActivity extends AppCompatActivity {
                         dataOutputStream.writeBytes("mount -o remount rw /system\n");
 
                         dataOutputStream.writeBytes("cp /sdcard/shell_code.sh /data/local/tmp/shell_code.sh\n");
-                        dataOutputStream.writeBytes("chmod 777 /data/local/tmp/shell_code.sh\n");
+                        dataOutputStream.writeBytes("chmod 0755 /data/local/tmp/shell_code.sh\n");
+//                        ToastHandler.getInstance().show(ControlPanelActivity.this, "dddddddddddddddd！", Toast.LENGTH_SHORT);
 
-                        Thread.sleep(1000);
-                        if (!checkFile("/data/local/tmp/shell_code.sh", "/sdcard/shell_code.sh")) {
-                            ToastHandler.getInstance().show(ControlPanelActivity.this, "移动文件出错，过检测失败，请马上关闭游戏！！", Toast.LENGTH_LONG);
-                            return;
-                        }
+                        Thread.sleep(2000);
+//                        if (!checkFile("/data/local/tmp/shell_code.sh", "/sdcard/shell_code.sh")) {
+//                            ToastHandler.getInstance().show(ControlPanelActivity.this, "移动文件出错，过检测失败，请马上关闭游戏！！", Toast.LENGTH_LONG);
+//                            return;
+//                        }
                         dataOutputStream.writeBytes("rm -rf /sdcard/shell_code.sh\n");
+//                        ToastHandler.getInstance().show(ControlPanelActivity.this, "9999999999！", Toast.LENGTH_SHORT);
+
                         dataOutputStream.writeBytes("sh /data/local/tmp/shell_code.sh\n");
-                        dataOutputStream.writeBytes("exit\n");
+                        dataOutputStream.flush();
+//                        dataOutputStream.writeBytes("exit\n");
                         String string;
                         boolean isSuccess = false;
-                        while ((string = bufferedReader.readLine()) != null) {
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                try {
+                                    Thread.sleep(60000);
+                                    if (exec != null) {
+                                        exec.destroy();
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }.start();
+                        while (true) {
+                            try {
+                                string = bufferedReader.readLine();
+                            } catch (IOException e) {
+                                break;
+                            }
+                            if (string == null) {
+                                break;
+                            }
                             System.out.println(string);
+//                            ToastHandler.getInstance().show(ControlPanelActivity.this, string, Toast.LENGTH_SHORT);
+
                             if ("openGame".equals(string)) {
                                 ToastHandler.getInstance().show(ControlPanelActivity.this, "正在打开游戏", Toast.LENGTH_LONG);
-                                startPubg(0);
+//                                startPubg(0);
                             } else if ("success".equals(string)) {
                                 ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测成功！！", Toast.LENGTH_LONG);
                                 isSuccess = true;
+                            } else if ("fail".equals(string)) {
+                                ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败，请马上关闭游戏！！", Toast.LENGTH_LONG);
+
+                            } else if ("finish".equals(string)) {
+                                try {
+                                    Thread.sleep(5000);
+                                    if (exec != null) {
+                                        exec.destroy();
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                ToastHandler.getInstance().show(ControlPanelActivity.this, "完成", Toast.LENGTH_LONG);
                             }
                         }
-                        if (!isSuccess) {
-                            ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败，请马上关闭游戏！！", Toast.LENGTH_LONG);
-                        }
+//                        if (!isSuccess) {
+//                            ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败，请马上关闭游戏！！", Toast.LENGTH_LONG);
+//                        }
+                        ToastHandler.getInstance().show(ControlPanelActivity.this, "jieshu   sdf", Toast.LENGTH_LONG);
                         System.out.println("end dddddddddddddddd");
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，过检测失败，请马上关闭游戏！!", Toast.LENGTH_SHORT);
                 } finally {
                     try {
