@@ -647,12 +647,9 @@ public class ControlPanelActivity extends AppCompatActivity {
             String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
 //            System.out.println("init content:    " + content);
             PassCheckResponse response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
-            String code;
+            String code = response.getContent();
             if (AppConstant.SHELL_CODE.equals(codeKey)) {
-//            code = convert(response.getContent());
-                code = response.getContent();
-            } else {
-                code = response.getContent();
+                code = convert(response.getContent());
             }
 //            System.out.println("code:    " + code);
             if (!BaseResponse.isSuccess(response)) {
@@ -913,19 +910,16 @@ public class ControlPanelActivity extends AppCompatActivity {
 
                         dataOutputStream.writeBytes("cp /sdcard/shell_code.sh /data/local/tmp/shell_code.sh\n");
                         dataOutputStream.writeBytes("chmod 0755 /data/local/tmp/shell_code.sh\n");
-//                        ToastHandler.getInstance().show(ControlPanelActivity.this, "dddddddddddddddd！", Toast.LENGTH_SHORT);
 
                         Thread.sleep(2000);
-//                        if (!checkFile("/data/local/tmp/shell_code.sh", "/sdcard/shell_code.sh")) {
-//                            ToastHandler.getInstance().show(ControlPanelActivity.this, "移动文件出错，过检测失败，请马上关闭游戏！！", Toast.LENGTH_LONG);
-//                            return;
-//                        }
+                        if (!checkFile("/data/local/tmp/shell_code.sh", "/sdcard/shell_code.sh")) {
+                            ToastHandler.getInstance().show(ControlPanelActivity.this, "移动文件出错，过检测失败，请马上关闭游戏！！", Toast.LENGTH_LONG);
+                            return;
+                        }
                         dataOutputStream.writeBytes("rm -rf /sdcard/shell_code.sh\n");
-//                        ToastHandler.getInstance().show(ControlPanelActivity.this, "9999999999！", Toast.LENGTH_SHORT);
-
                         dataOutputStream.writeBytes("sh /data/local/tmp/shell_code.sh\n");
                         dataOutputStream.flush();
-//                        dataOutputStream.writeBytes("exit\n");
+
                         String string;
                         boolean isSuccess = false;
                         new Thread() {
@@ -951,14 +945,12 @@ public class ControlPanelActivity extends AppCompatActivity {
                                 break;
                             }
                             System.out.println(string);
-//                            ToastHandler.getInstance().show(ControlPanelActivity.this, string, Toast.LENGTH_SHORT);
 
                             if ("openGame".equals(string)) {
                                 ToastHandler.getInstance().show(ControlPanelActivity.this, "正在打开游戏", Toast.LENGTH_LONG);
-//                                startPubg(0);
+                                startPubg(0);
                             } else if ("success".equals(string)) {
                                 ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测成功！！", Toast.LENGTH_LONG);
-                                isSuccess = true;
                             } else if ("fail".equals(string)) {
                                 ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败，请马上关闭游戏！！", Toast.LENGTH_LONG);
 
@@ -977,7 +969,7 @@ public class ControlPanelActivity extends AppCompatActivity {
 //                        if (!isSuccess) {
 //                            ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败，请马上关闭游戏！！", Toast.LENGTH_LONG);
 //                        }
-                        ToastHandler.getInstance().show(ControlPanelActivity.this, "jieshu   sdf", Toast.LENGTH_LONG);
+//                        ToastHandler.getInstance().show(ControlPanelActivity.this, "jieshu   sdf", Toast.LENGTH_LONG);
                         System.out.println("end dddddddddddddddd");
                     }
                 } catch (Exception e) {
