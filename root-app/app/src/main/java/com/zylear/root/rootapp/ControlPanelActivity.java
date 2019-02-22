@@ -83,10 +83,10 @@ public class ControlPanelActivity extends AppCompatActivity {
         buyVip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                buyVip();
-                if (!checkOperationFrequent()) {
-                    recoverBrand();
-                }
+                buyVip();
+//                if (!checkOperationFrequent()) {
+//                    recoverBrand();
+//                }
             }
         });
 
