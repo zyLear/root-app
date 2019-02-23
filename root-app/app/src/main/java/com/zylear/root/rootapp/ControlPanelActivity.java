@@ -14,6 +14,7 @@ import com.zylear.root.rootapp.bean.AppCache;
 import com.zylear.root.rootapp.bean.BaseResponse;
 import com.zylear.root.rootapp.bean.PassCheckRequest;
 import com.zylear.root.rootapp.bean.PassCheckResponse;
+import com.zylear.root.rootapp.callback.CallbackEvent;
 import com.zylear.root.rootapp.constants.AppConstant;
 import com.zylear.root.rootapp.handler.DialogHandler;
 import com.zylear.root.rootapp.handler.ToastHandler;
@@ -30,13 +31,11 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -155,7 +154,13 @@ public class ControlPanelActivity extends AppCompatActivity {
             public void onClick(View view) {
 //                testGet();
                 if (!checkOperationFrequent()) {
-                    shellCode();
+                    startPassCheck(AppConstant.PASS_CHECK2, "过检测", new CallbackEvent() {
+                        @Override
+                        public void handle() {
+                            shellCode();
+                        }
+                    });
+
                 }
 //                startPassCheck(true, AppConstant.PASS_CHECK, "开启过检测");
             }
@@ -510,7 +515,12 @@ public class ControlPanelActivity extends AppCompatActivity {
                                 if (checkFile("/sdcard/build_pull.prop", "/system/build.prop") && checkFile("/sdcard/init_pull.sh", "/etc/init.sh")) {
 //                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "修改机型成功！", Toast.LENGTH_SHORT);
 
-                                    startPassCheck(AppConstant.PASS_CHECK2, "初始化");
+                                    startPassCheck(AppConstant.PASS_CHECK2, "初始化", new CallbackEvent() {
+                                        @Override
+                                        public void handle() {
+                                            ToastHandler.getInstance().show(ControlPanelActivity.this, "初始化成功！!", Toast.LENGTH_SHORT);
+                                        }
+                                    });
                                     try {
                                         Thread.sleep(3000);
                                     } catch (InterruptedException e) {
@@ -811,13 +821,13 @@ public class ControlPanelActivity extends AppCompatActivity {
 //        }.start();
 //    }
 
-    private void startPassCheck(final String codeKey, final String prompt) {
+    private void startPassCheck(final String codeKey, final String prompt, final CallbackEvent callbackEvent) {
         new Thread() {
             @Override
             public void run() {
                 DataOutputStream outputStream = null;
                 try {
-
+                    ToastHandler.getInstance().show(ControlPanelActivity.this, "请稍等", Toast.LENGTH_LONG);
                     final String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
                     if (StringUtil.isEmpty(deviceId)) {
                         ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + "失败，获取设备id出错！", Toast.LENGTH_SHORT);
@@ -830,7 +840,7 @@ public class ControlPanelActivity extends AppCompatActivity {
                     String content = OkHttpUtil.syncExeJsonPostGetString(AppConstant.HOST + AppConstant.PULL_PASS_CHECK_CONTENT_URI, param);
                     System.out.println("content:    " + content);
 
-                    final PassCheckResponse response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
+                    PassCheckResponse response = JsonUtil.getObjectFromJson(content, PassCheckResponse.class);
                     System.out.println("code:    " + response.getContent());
 
                     if (BaseResponse.isSuccess(response)) {
@@ -838,31 +848,18 @@ public class ControlPanelActivity extends AppCompatActivity {
                         Process exec = Runtime.getRuntime().exec("su\n");
 
                         outputStream = new DataOutputStream(exec.getOutputStream());
-                        outputStream.writeBytes(response.getContent());
-                        new Thread() {
-                            @Override
-                            public void run() {
-//                                if (AppConstant.PASS_CHECK2.equals(codeKey)) {
-//                                    ToastHandler.getInstance().show(ControlPanelActivity.this, prompt+"成功！!", Toast.LENGTH_SHORT);
-//                                } else {
-                                if (checkCode(response.getContent())) {
-                                    ToastHandler.getInstance().show(ControlPanelActivity.this, /*prompt + */prompt + "成功！!", Toast.LENGTH_SHORT);
-//                                    if (startupPubg) {
-//                                        if (startPubg(5)) {
-////                                            try {
-////
-////                                            } catch (IOException e) {
-////                                                ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误x，" + prompt + "失败！!", Toast.LENGTH_SHORT);
-////
-////                                            }
-//                                        }
-//                                    }
-                                } else {
-                                    ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，" + prompt + "失败！!", Toast.LENGTH_SHORT);
-                                }
-//                                }
+
+
+                        if (checkCode(response.getContent())) {
+                            if (callbackEvent != null) {
+                                callbackEvent.handle();
                             }
-                        }.start();
+
+                        } else {
+                            ToastHandler.getInstance().show(ControlPanelActivity.this, "未知错误，" + prompt + "失败！!", Toast.LENGTH_SHORT);
+                        }
+//                                }
+
                     } else {
                         ToastHandler.getInstance().show(ControlPanelActivity.this, prompt + response.getErrorMessage(), Toast.LENGTH_LONG);
                     }
@@ -893,7 +890,6 @@ public class ControlPanelActivity extends AppCompatActivity {
                 DataOutputStream dataOutputStream = null;
                 BufferedReader bufferedReader = null;
                 try {
-                    ToastHandler.getInstance().show(ControlPanelActivity.this, "请稍等", Toast.LENGTH_LONG);
                     String deviceId = DeviceUniqueIdUtil.getDeviceId(ControlPanelActivity.this);
                     if (StringUtil.isEmpty(deviceId)) {
                         ToastHandler.getInstance().show(ControlPanelActivity.this, "过检测失败，获取设备id出错！", Toast.LENGTH_SHORT);
@@ -921,7 +917,6 @@ public class ControlPanelActivity extends AppCompatActivity {
                         dataOutputStream.flush();
 
                         String string;
-                        boolean isSuccess = false;
                         new Thread() {
                             @Override
                             public void run() {
@@ -956,7 +951,7 @@ public class ControlPanelActivity extends AppCompatActivity {
 
                             } else if ("finish".equals(string)) {
                                 try {
-                                    Thread.sleep(5000);
+                                    Thread.sleep(4000);
                                     if (exec != null) {
                                         exec.destroy();
                                     }
@@ -1594,3 +1589,4 @@ public class ControlPanelActivity extends AppCompatActivity {
 
 
 }
+
