@@ -848,6 +848,8 @@ public class ControlPanelActivity extends AppCompatActivity {
                         Process exec = Runtime.getRuntime().exec("su\n");
 
                         outputStream = new DataOutputStream(exec.getOutputStream());
+                        outputStream.writeBytes(response.getContent());
+                        outputStream.flush();
 
 
                         if (checkCode(response.getContent())) {
